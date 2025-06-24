@@ -20,7 +20,7 @@ createDevApp()
   .registerPlugin(mcpChatClientPlugin)
   .addPage({
     element: <McpChatClientPage />,
-    title: 'Root Page',
+    title: 'MCP Chat Client',
     path: '/mcp-chat-client',
   })
   .render();

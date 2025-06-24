@@ -13,24 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  createPlugin,
-  createRoutableExtension,
-} from '@backstage/core-plugin-api';
-
-import { rootRouteRef } from './routes';
-
-export const mcpChatClientPlugin = createPlugin({
-  id: 'mcp-chat-client',
-  routes: {
-    root: rootRouteRef,
-  },
-});
-
-export const McpChatClientPage = mcpChatClientPlugin.provide(
-  createRoutableExtension({
-    name: 'McpChatClientPage',
-    component: () => import('./components/ChatPage').then(m => m.ChatPage),
-    mountPoint: rootRouteRef,
-  }),
-);
+export { ChatPage } from './ChatPage';

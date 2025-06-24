@@ -90,7 +90,11 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
         <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
-        <SidebarItem icon={ExtensionIcon} to="mcp-chat" text="MCP Chat" />
+        <SidebarItem
+          icon={ExtensionIcon}
+          to="mcp-chat-client"
+          text="MCP Chat Client"
+        />
         {/* End global nav */}
         <SidebarDivider />
         <SidebarScrollWrapper>

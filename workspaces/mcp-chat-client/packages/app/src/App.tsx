@@ -115,7 +115,7 @@ const routes = (
     </Route>
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
-    <Route path="/mcp-chat" element={<McpChatClientPage />} />
+    <Route path="/mcp-chat-client" element={<McpChatClientPage />} />
   </FlatRoutes>
 );
 
