@@ -24,6 +24,26 @@ integrations:
     - host: github.com
       token: ${GITHUB_TOKEN}
 
+mcpChat:
+  providers:
+    - id: openai
+      token: ${OPENAI_API_KEY}
+      model: gpt-4o-mini
+  mcpServers:
+    - id: brave-search-server
+      name: Brave Search Server
+      npxCommand: '@modelcontextprotocol/server-brave-search@latest'
+      env:
+        BRAVE_API_KEY: ${BRAVE_API_KEY}
+    - id: kubernetes-server
+      name: Kubernetes Server
+      npxCommand: 'kubernetes-mcp-server@latest'
+    - id: backstage-server
+      name: Backstage Server
+      url: 'http://localhost:7007/api/mcp-actions/v1'
+      headers:
+        Authorization: 'Bearer your-token'
+
 proxy:
 
 techdocs:

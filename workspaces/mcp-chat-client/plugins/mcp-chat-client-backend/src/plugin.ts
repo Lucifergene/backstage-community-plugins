@@ -19,7 +19,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
 import { catalogServiceRef } from '@backstage/plugin-catalog-node';
-import { createTodoListService } from './services/TodoListService';
+import { createMCPClientService } from './services/MCPClientService';
 
 /**
  * mcpChatClientPlugin backend plugin
@@ -33,21 +33,26 @@ export const mcpChatClientPlugin = createBackendPlugin({
       deps: {
         logger: coreServices.logger,
         httpAuth: coreServices.httpAuth,
+        config: coreServices.rootConfig,
         httpRouter: coreServices.httpRouter,
-        catalog: catalogServiceRef,
       },
-      async init({ logger, httpAuth, httpRouter, catalog }) {
-        const todoListService = await createTodoListService({
+      async init({ logger, httpAuth, httpRouter, config }) {
+        const mcpClientService = await createMCPClientService({
           logger,
-          catalog,
+          config,
         });
 
         httpRouter.use(
           await createRouter({
             httpAuth,
-            todoListService,
+            mcpClientService,
+            config,
           }),
         );
+        httpRouter.addAuthPolicy({
+          path: '/',
+          allow: 'unauthenticated',
+        });
       },
     });
   },

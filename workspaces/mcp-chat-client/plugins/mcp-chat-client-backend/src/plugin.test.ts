@@ -13,88 +13,419 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  mockCredentials,
-  startTestBackend,
-} from '@backstage/backend-test-utils';
+import { startTestBackend } from '@backstage/backend-test-utils';
 import { mcpChatClientPlugin } from './plugin';
 import request from 'supertest';
-import { catalogServiceMock } from '@backstage/plugin-catalog-node/testUtils';
+import { TestBackend } from '@backstage/backend-test-utils';
 
-// TEMPLATE NOTE:
-// Plugin tests are integration tests for your plugin, ensuring that all pieces
-// work together end-to-end. You can still mock injected backend services
-// however, just like anyone who installs your plugin might replace the
-// services with their own implementations.
-describe('plugin', () => {
-  it('should create and read TODO items', async () => {
-    const { server } = await startTestBackend({
+// Mock the MCPClientService to avoid actual MCP connections during tests
+jest.mock('./services/MCPClientService', () => ({
+  createMCPClientService: jest.fn().mockResolvedValue({
+    initMCP: jest.fn().mockResolvedValue(undefined),
+    processQuery: jest.fn().mockResolvedValue({
+      reply: 'Mocked response from MCP',
+      toolCalls: [],
+      toolResponses: [],
+    }),
+    getProviderConfig: jest.fn().mockReturnValue({
+      id: 'openai',
+      model: 'gpt-4o-mini',
+    }),
+    getProviderStatus: jest.fn().mockReturnValue({
+      connected: true,
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+    }),
+  }),
+}));
+
+describe('mcpChatClientPlugin', () => {
+  let backend: TestBackend;
+
+  beforeEach(async () => {
+    backend = await startTestBackend({
       features: [mcpChatClientPlugin],
     });
-
-    await request(server).get('/api/mcp-chat-client/todos').expect(200, {
-      items: [],
-    });
-
-    const createRes = await request(server)
-      .post('/api/mcp-chat-client/todos')
-      .send({ title: 'My Todo' });
-
-    expect(createRes.status).toBe(201);
-    expect(createRes.body).toEqual({
-      id: expect.any(String),
-      title: 'My Todo',
-      createdBy: mockCredentials.user().principal.userEntityRef,
-      createdAt: expect.any(String),
-    });
-
-    const createdTodoItem = createRes.body;
-
-    await request(server)
-      .get('/api/mcp-chat-client/todos')
-      .expect(200, {
-        items: [createdTodoItem],
-      });
-
-    await request(server)
-      .get(`/api/mcp-chat-client/todos/${createdTodoItem.id}`)
-      .expect(200, createdTodoItem);
   });
 
-  it('should create TODO item with catalog information', async () => {
-    const { server } = await startTestBackend({
-      features: [
-        mcpChatClientPlugin,
-        catalogServiceMock.factory({
-          entities: [
-            {
-              apiVersion: 'backstage.io/v1alpha1',
-              kind: 'Component',
-              metadata: {
-                name: 'my-component',
-                namespace: 'default',
-                title: 'My Component',
-              },
-              spec: {
-                type: 'service',
-                owner: 'me',
-              },
-            },
-          ],
-        }),
-      ],
+  afterEach(async () => {
+    await backend?.stop();
+  });
+
+  describe('Plugin Registration', () => {
+    it('should register the plugin successfully', async () => {
+      expect(backend).toBeDefined();
+      expect(backend.server).toBeDefined();
+    });
+  });
+
+  describe('HTTP Routes', () => {
+    describe('GET /api/mcp-chat-client/config/status', () => {
+      it('should return configuration status', async () => {
+        const response = await request(backend.server)
+          .get('/api/mcp-chat-client/config/status')
+          .expect(200);
+
+        expect(response.body).toHaveProperty('provider');
+        expect(response.body).toHaveProperty('mcpServers');
+        expect(Array.isArray(response.body.mcpServers)).toBe(true);
+      });
     });
 
-    const createRes = await request(server)
-      .post('/api/mcp-chat-client/todos')
-      .send({ title: 'My Todo', entityRef: 'component:default/my-component' });
+    describe('POST /api/mcp-chat-client/chat', () => {
+      it('should process chat messages successfully', async () => {
+        const chatRequest = {
+          messages: [
+            { role: 'user', content: 'Hello, what tools are available?' },
+          ],
+          enabledTools: [],
+        };
 
-    expect(createRes.status).toBe(201);
-    expect(createRes.body).toEqual({
-      id: expect.any(String),
-      title: '[My Component] My Todo',
-      createdBy: mockCredentials.user().principal.userEntityRef,
-      createdAt: expect.any(String),
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send(chatRequest)
+          .expect(200);
+
+        expect(response.body).toHaveProperty('role');
+        expect(response.body).toHaveProperty('content');
+        expect(response.body.role).toBe('assistant');
+      });
+
+      it('should handle chat request with enabled tools', async () => {
+        const chatRequest = {
+          messages: [{ role: 'user', content: 'Search for latest news' }],
+          enabledTools: ['search_web'],
+        };
+
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send(chatRequest)
+          .expect(200);
+
+        expect(response.body.role).toBe('assistant');
+        expect(response.body).toHaveProperty('content');
+        expect(response.body).toHaveProperty('toolResponses');
+      });
+
+      it('should return 400 for empty messages', async () => {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            messages: [],
+            enabledTools: [],
+          })
+          .expect(400);
+
+        expect(response.body.error).toBe('No query provided');
+      });
+
+      it('should return 400 for missing content in last message', async () => {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            messages: [{ role: 'user' }],
+            enabledTools: [],
+          })
+          .expect(400);
+
+        expect(response.body.error).toBe('No query provided');
+      });
+
+      it('should handle malformed JSON requests', async () => {
+        await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .set('Content-Type', 'application/json')
+          .send('invalid json')
+          .expect(400);
+      });
+
+      it('should handle missing messages field', async () => {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            enabledTools: [],
+          })
+          .expect(400);
+
+        expect(response.body.error).toBe('No query provided');
+      });
+    });
+
+    describe('GET /api/mcp-chat-client/test/latest-news', () => {
+      it('should return test response for latest news', async () => {
+        const response = await request(backend.server)
+          .get('/api/mcp-chat-client/test/latest-news')
+          .expect(200);
+
+        expect(response.body).toHaveProperty('prompt');
+        expect(response.body).toHaveProperty('reply');
+        expect(response.body).toHaveProperty('toolCalls');
+        expect(response.body).toHaveProperty('toolResponses');
+        expect(response.body).toHaveProperty('serverConfigs');
+        expect(response.body).toHaveProperty('role');
+      });
+
+      it('should include current month and year in prompt', async () => {
+        const response = await request(backend.server)
+          .get('/api/mcp-chat-client/test/latest-news')
+          .expect(200);
+
+        const now = new Date();
+        const currentMonth = now.toLocaleString('en-US', { month: 'long' });
+        const currentYear = now.getFullYear();
+
+        expect(response.body.prompt).toContain(currentMonth);
+        expect(response.body.prompt).toContain(currentYear.toString());
+      });
+    });
+
+    describe('GET /api/mcp-chat-client/test/tools', () => {
+      it('should return tools information', async () => {
+        const response = await request(backend.server)
+          .get('/api/mcp-chat-client/test/tools')
+          .expect(200);
+
+        expect(response.body).toHaveProperty('message');
+        expect(response.body).toHaveProperty('serverConfigs');
+        expect(response.body).toHaveProperty('llmReply');
+        expect(response.body).toHaveProperty('timestamp');
+        expect(response.body.message).toBe('Tools check completed');
+      });
+
+      it('should include server configuration details', async () => {
+        const response = await request(backend.server)
+          .get('/api/mcp-chat-client/test/tools')
+          .expect(200);
+
+        expect(Array.isArray(response.body.serverConfigs)).toBe(true);
+      });
+    });
+  });
+
+  describe('Authentication and Authorization', () => {
+    it('should allow unauthenticated access to all endpoints', async () => {
+      // Test that endpoints are accessible without authentication
+      await request(backend.server)
+        .get('/api/mcp-chat-client/config/status')
+        .expect(200);
+
+      await request(backend.server)
+        .post('/api/mcp-chat-client/chat')
+        .send({
+          messages: [{ role: 'user', content: 'test' }],
+          enabledTools: [],
+        })
+        .expect(200);
+
+      await request(backend.server)
+        .get('/api/mcp-chat-client/test/latest-news')
+        .expect(200);
+
+      await request(backend.server)
+        .get('/api/mcp-chat-client/test/tools')
+        .expect(200);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle invalid route gracefully', async () => {
+      await request(backend.server)
+        .get('/api/mcp-chat-client/nonexistent')
+        .expect(404);
+    });
+
+    it('should handle invalid HTTP methods', async () => {
+      await request(backend.server)
+        .put('/api/mcp-chat-client/config/status')
+        .expect(404);
+
+      await request(backend.server)
+        .delete('/api/mcp-chat-client/chat')
+        .expect(404);
+    });
+
+    it('should handle large payloads', async () => {
+      const largeMessage = 'a'.repeat(100000);
+      const response = await request(backend.server)
+        .post('/api/mcp-chat-client/chat')
+        .send({
+          messages: [{ role: 'user', content: largeMessage }],
+          enabledTools: [],
+        });
+
+      // Should either succeed or fail gracefully
+      expect([200, 413, 500]).toContain(response.status);
+    });
+  });
+
+  describe('Concurrent Requests', () => {
+    it('should handle multiple concurrent chat requests', async () => {
+      const requests = Array.from({ length: 5 }, (_, i) =>
+        request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            messages: [{ role: 'user', content: `Message ${i}` }],
+            enabledTools: [],
+          }),
+      );
+
+      const responses = await Promise.all(requests);
+      responses.forEach(response => {
+        expect([200, 500]).toContain(response.status);
+      });
+    });
+
+    it('should handle concurrent config status requests', async () => {
+      const requests = Array.from({ length: 3 }, () =>
+        request(backend.server).get('/api/mcp-chat-client/config/status'),
+      );
+
+      const responses = await Promise.all(requests);
+      responses.forEach(response => {
+        expect(response.status).toBe(200);
+      });
+    });
+  });
+
+  describe('Tool Integration', () => {
+    it('should handle empty enabled tools array', async () => {
+      const response = await request(backend.server)
+        .post('/api/mcp-chat-client/chat')
+        .send({
+          messages: [{ role: 'user', content: 'test' }],
+          enabledTools: [],
+        })
+        .expect(200);
+
+      expect(response.body.role).toBe('assistant');
+    });
+
+    it('should handle missing enabled tools field', async () => {
+      const response = await request(backend.server)
+        .post('/api/mcp-chat-client/chat')
+        .send({
+          messages: [{ role: 'user', content: 'test' }],
+        })
+        .expect(200);
+
+      expect(response.body.role).toBe('assistant');
+    });
+
+    it('should handle various tool names', async () => {
+      const toolSets = [
+        ['search_web'],
+        ['get_weather', 'search_web'],
+        ['nonexistent_tool'],
+        [],
+      ];
+
+      for (const enabledTools of toolSets) {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            messages: [{ role: 'user', content: 'test' }],
+            enabledTools,
+          });
+
+        expect([200, 500]).toContain(response.status);
+      }
+    });
+  });
+
+  describe('Message Format Validation', () => {
+    it('should handle various message formats', async () => {
+      const messageFormats = [
+        [{ role: 'user', content: 'simple message' }],
+        [
+          { role: 'system', content: 'You are helpful' },
+          { role: 'user', content: 'help me' },
+        ],
+        [
+          { role: 'user', content: 'first' },
+          { role: 'assistant', content: 'response' },
+          { role: 'user', content: 'follow up' },
+        ],
+      ];
+
+      for (const messages of messageFormats) {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            messages,
+            enabledTools: [],
+          });
+
+        expect([200, 400, 500]).toContain(response.status);
+      }
+    });
+
+    it('should handle messages with special characters', async () => {
+      const specialMessages = [
+        'Hello 🌍 world!',
+        'Test with "quotes" and \'apostrophes\'',
+        'Unicode: café, naïve, résumé',
+        'Emoji: 😀 😃 😄 😁',
+        'Newlines\nand\ttabs',
+        JSON.stringify({ nested: 'object' }),
+      ];
+
+      for (const content of specialMessages) {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send({
+            messages: [{ role: 'user', content }],
+            enabledTools: [],
+          });
+
+        expect([200, 400, 500]).toContain(response.status);
+      }
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty string content', async () => {
+      const response = await request(backend.server)
+        .post('/api/mcp-chat-client/chat')
+        .send({
+          messages: [{ role: 'user', content: '' }],
+          enabledTools: [],
+        })
+        .expect(400);
+
+      expect(response.body.error).toBe('No query provided');
+    });
+
+    it('should handle null and undefined values', async () => {
+      const badRequests = [
+        { messages: null, enabledTools: [] },
+        { messages: undefined, enabledTools: [] },
+        { messages: [{ role: 'user', content: null }], enabledTools: [] },
+        { messages: [{ role: 'user', content: undefined }], enabledTools: [] },
+      ];
+
+      for (const badRequest of badRequests) {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send(badRequest);
+
+        expect([400, 500]).toContain(response.status);
+      }
+    });
+
+    it('should handle missing required fields', async () => {
+      const badRequests = [
+        { enabledTools: [] }, // missing messages
+        { messages: [] }, // missing enabledTools is OK, empty messages is not
+        {}, // missing everything
+      ];
+
+      for (const badRequest of badRequests) {
+        const response = await request(backend.server)
+          .post('/api/mcp-chat-client/chat')
+          .send(badRequest);
+
+        expect(response.status).toBe(400);
+      }
     });
   });
 });
