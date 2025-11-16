@@ -8,6 +8,9 @@
   },
   "scripts": {
     "start": "backstage-cli repo start",
+    "start:mcp": "backstage-cli repo start @backstage-community/plugin-mcp-chat @backstage-community/plugin-mcp-chat-backend",
+    "start:k8s": "backstage-cli repo start @internal/backstage-plugin-k8s-ai-assistant @internal/backstage-plugin-k8s-ai-assistant-backend",
+    "start:all": "backstage-cli repo start @backstage-community/plugin-mcp-chat @internal/backstage-plugin-k8s-ai-assistant @backstage-community/plugin-mcp-chat-backend @internal/backstage-plugin-k8s-ai-assistant-backend",
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false",
     "build:all": "backstage-cli repo build --all",
@@ -26,7 +29,8 @@
   },
   "workspaces": {
     "packages": [
-      "plugins/*"
+      "plugins/*",
+      "packages/*"
     ]
   },
   "repository": {
