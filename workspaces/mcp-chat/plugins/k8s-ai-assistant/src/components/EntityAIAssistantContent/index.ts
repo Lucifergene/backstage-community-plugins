@@ -1,0 +1,1 @@
+export { EntityAIAssistantContent } from './EntityAIAssistantContent';
