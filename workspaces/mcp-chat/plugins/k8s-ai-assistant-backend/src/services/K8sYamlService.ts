@@ -18,6 +18,7 @@ import {
   LoggerService,
   RootConfigService,
 } from '@backstage/backend-plugin-api';
+import { type LLMProvider } from '@lucifergene/plugin-mcp-chat-backend';
 import {
   YamlGenerateRequest,
   YamlGenerateResponse,
@@ -29,14 +30,14 @@ import { SYSTEM_PROMPTS } from '../constants/systemPrompts';
 
 export class K8sYamlService {
   private readonly logger: LoggerService;
-  private readonly llmProvider: any;
+  private readonly llmProvider: LLMProvider;
   private readonly knowledgeBaseService: KnowledgeBaseService | null;
   private readonly systemPrompt: string;
 
   constructor(options: {
     logger: LoggerService;
     config: RootConfigService;
-    llmProvider: any;
+    llmProvider: LLMProvider;
     knowledgeBaseService: KnowledgeBaseService | null;
   }) {
     this.logger = options.logger;
@@ -49,13 +50,18 @@ export class K8sYamlService {
     request: YamlGenerateRequest,
   ): Promise<YamlGenerateResponse> {
     // Determine if this is the initial request or a follow-up
-    const isInitialRequest = request.messages.length === 1 && 
-                             request.messages[0].role === 'user';
+    const isInitialRequest =
+      request.messages.length === 1 && request.messages[0].role === 'user';
 
-    this.logger.info(`Generating YAML with LLM (${isInitialRequest ? 'initial' : 'follow-up'})`, {
-      enableRAG: request.enableRAG,
-      messageCount: request.messages.length,
-    });
+    this.logger.info(
+      `Generating YAML with LLM (${
+        isInitialRequest ? 'initial' : 'follow-up'
+      })`,
+      {
+        enableRAG: request.enableRAG,
+        messageCount: request.messages.length,
+      },
+    );
 
     let ragContext: string[] = [];
     let messages: ChatMessage[];
@@ -129,7 +135,9 @@ Generate new YAML that follows these patterns while adapting to the user's speci
           }
         } catch (error) {
           this.logger.warn(
-            `Failed to retrieve RAG context for YAML: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Failed to retrieve RAG context for YAML: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
           );
           // Continue without RAG context
         }
@@ -165,10 +173,11 @@ Generate new YAML that follows these patterns while adapting to the user's speci
   private extractYamlBlocks(content: string): string[] {
     const yamlRegex = /```(?:yaml|yml)\n([\s\S]*?)```/g;
     const blocks: string[] = [];
-    let match;
+    let match = yamlRegex.exec(content);
 
-    while ((match = yamlRegex.exec(content)) !== null) {
+    while (match !== null) {
       blocks.push(match[1].trim());
+      match = yamlRegex.exec(content);
     }
 
     return blocks;

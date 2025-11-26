@@ -22,15 +22,15 @@ import { K8sLogService } from './services/K8sLogService';
 import { K8sYamlService } from './services/K8sYamlService';
 import { K8sGeneralChatService } from './services/K8sGeneralChatService';
 import { K8sAiAssistantServiceImpl } from './services/K8sAiAssistantServiceImpl';
-import { ProviderFactory } from './providers/provider-factory';
-import { getProviderConfig } from './utils/config-adapter';
 import { getKnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
 
-// Import MCPClientServiceImpl from mcp-chat-backend
-// Using require as workaround until proper exports are added to the package
-// See EXPORT_IMPROVEMENTS.md in mcp-chat-backend for the export plan
-const MCPClientServiceImplModule = require('@backstage-community/plugin-mcp-chat-backend/dist/services/MCPClientServiceImpl.cjs.js');
-const MCPClientServiceImpl = MCPClientServiceImplModule.MCPClientServiceImpl || MCPClientServiceImplModule.default || MCPClientServiceImplModule;
+// Import from mcp-chat-backend library
+import {
+  MCPClientServiceImpl,
+  ProviderFactory,
+  getProviderConfig,
+  type MCPServer,
+} from '@lucifergene/plugin-mcp-chat-backend';
 
 /**
  * k8SAiAssistantPlugin backend plugin
@@ -50,13 +50,19 @@ export const k8SAiAssistantPlugin = createBackendPlugin({
         // Initialize shared MCP Client Service (handles all MCP servers)
         logger.info('Initializing shared MCP Client Service');
         const mcpClientService = new MCPClientServiceImpl({ logger, config });
-        
+
         // Initialize MCP servers
         try {
           const servers = await mcpClientService.initializeMCPServers();
-          logger.info(`MCP servers initialized: ${servers.length} servers configured`);
-          servers.forEach((server: any) => {
-            logger.info(`  - ${server.name}: ${server.status.connected ? 'connected' : 'failed'}`);
+          logger.info(
+            `MCP servers initialized: ${servers.length} servers configured`,
+          );
+          servers.forEach((server: MCPServer) => {
+            logger.info(
+              `  - ${server.name}: ${
+                server.status.connected ? 'connected' : 'failed'
+              }`,
+            );
           });
         } catch (error) {
           logger.error(`Failed to initialize MCP servers: ${error}`);
@@ -65,7 +71,10 @@ export const k8SAiAssistantPlugin = createBackendPlugin({
         // Initialize Knowledge Base Service (handles embeddings + vector stores)
         let knowledgeBaseService = null;
         try {
-          knowledgeBaseService = await getKnowledgeBaseService({ logger, config });
+          knowledgeBaseService = await getKnowledgeBaseService({
+            logger,
+            config,
+          });
           logger.info('Knowledge Base service initialized successfully');
         } catch (error) {
           logger.warn(
@@ -83,7 +92,7 @@ export const k8SAiAssistantPlugin = createBackendPlugin({
         });
 
         // Initialize K8s Log Service (with MCPClientService injection)
-        const k8sLogService = new K8sLogService({ 
+        const k8sLogService = new K8sLogService({
           logger,
           mcpClientService,
         });

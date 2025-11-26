@@ -17,29 +17,30 @@ import {
   LoggerService,
   RootConfigService,
 } from '@backstage/backend-plugin-api';
-import { ProviderFactory } from '../providers/provider-factory';
-import { getProviderConfig } from '../utils/config-adapter';
+import {
+  ProviderFactory,
+  getProviderConfig,
+  type MCPClientService,
+  type LLMProvider,
+  type ToolCall,
+} from '@lucifergene/plugin-mcp-chat-backend';
 import { GeneralChatRequest, GeneralChatResponse, ChatMessage } from '../types';
 import { KnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
 import { SYSTEM_PROMPTS } from '../constants/systemPrompts';
 
-// Type for MCPClientService - using 'any' as workaround until exports are added
-// See EXPORT_IMPROVEMENTS.md in mcp-chat-backend for the export plan
-type MCPClientServiceType = any;
-
 export class K8sGeneralChatService {
   private readonly logger: LoggerService;
   private readonly config: RootConfigService;
-  private readonly llmProvider: any;
+  private readonly llmProvider: LLMProvider;
   private readonly knowledgeBaseService: KnowledgeBaseService | null;
-  private readonly mcpClientService: MCPClientServiceType | null;
+  private readonly mcpClientService: MCPClientService | null;
   private readonly systemPrompt: string;
 
   constructor(options: {
     logger: LoggerService;
     config: RootConfigService;
     knowledgeBaseService: KnowledgeBaseService | null;
-    mcpClientService?: MCPClientServiceType;
+    mcpClientService?: MCPClientService;
   }) {
     this.logger = options.logger;
     this.config = options.config;
@@ -165,15 +166,14 @@ Instructions:
     try {
       if (request.enableMCPTools && this.mcpClientService) {
         // Delegate entire query processing, including tool calls, to MCPClientService
-        const availableTools =
-          (this.mcpClientService as any).getAvailableTools?.() || [];
+        const availableTools = this.mcpClientService.getAvailableTools() || [];
         this.logger.info(
           `Processing chat with MCP tools enabled. Available tools: ${availableTools.length}`,
         );
 
-        const mcpResponse = await this.mcpClientService.processQuery(
+        const mcpResponse = await (this.mcpClientService as any).processQuery(
           messagesWithSystem,
-          [], // Empty array = enable all MCP servers
+          undefined, // undefined = enable all MCP servers (empty array would disable all)
         );
 
         // Map QueryResponse (reply, toolCalls, toolResponses) to GeneralChatResponse format
@@ -181,27 +181,25 @@ Instructions:
           role: 'assistant',
           content: mcpResponse.reply,
           toolsUsed:
-            mcpResponse.toolCalls?.map(
-              (tc: { function: { name: string } }) => tc.function.name,
-            ) || undefined,
+            mcpResponse.toolCalls?.map((tc: ToolCall) => tc.function.name) ||
+            undefined,
           toolResponses: mcpResponse.toolResponses || undefined,
           ragContext: ragContext.length > 0 ? ragContext : undefined,
         };
-      } else {
-        // Fallback to direct LLM call if MCP tools are not enabled
-        this.logger.info('Processing chat without MCP tools');
-
-        const llmResponse = await this.llmProvider.sendMessage(
-          messagesWithSystem,
-          undefined, // No tools
-        );
-
-        return {
-          role: 'assistant',
-          content: llmResponse.choices[0].message.content || '',
-          ragContext: ragContext.length > 0 ? ragContext : undefined,
-        };
       }
+      // Fallback to direct LLM call if MCP tools are not enabled
+      this.logger.info('Processing chat without MCP tools');
+
+      const llmResponse = await this.llmProvider.sendMessage(
+        messagesWithSystem,
+        undefined, // No tools
+      );
+
+      return {
+        role: 'assistant',
+        content: llmResponse.choices[0].message.content || '',
+        ragContext: ragContext.length > 0 ? ragContext : undefined,
+      };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
