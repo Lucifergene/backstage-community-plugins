@@ -17,25 +17,24 @@ import {
   LoggerService,
   RootConfigService,
 } from '@backstage/backend-plugin-api';
+import {
+  ProviderFactory,
+  getProviderConfig,
+  type MCPClientService,
+} from '@lucifergene/plugin-mcp-chat-backend';
 import { K8sAiAssistantService } from './K8sAiAssistantService';
 import {
   ProviderStatusData,
   VectorStoreStatusData,
-  MCPServerStatusData,
-  ServerTool,
+  K8sMCPServerStatusData,
+  K8sServerTool,
 } from '../types';
-import { ProviderFactory } from '../providers/provider-factory';
-import { getProviderConfig } from '../utils/config-adapter';
 import { KnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
-
-// Type for MCPClientService - using 'any' as workaround until exports are added
-// See EXPORT_IMPROVEMENTS.md in mcp-chat-backend for the export plan
-type MCPClientServiceType = any;
 
 export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
   private readonly logger: LoggerService;
   private readonly config: RootConfigService;
-  private mcpClientService: MCPClientServiceType | null = null;
+  private mcpClientService: MCPClientService | null = null;
   private knowledgeBaseService: KnowledgeBaseService | null = null;
 
   constructor(options: {
@@ -48,7 +47,7 @@ export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
     this.knowledgeBaseService = options.knowledgeBaseService || null;
   }
 
-  setMCPClientService(service: MCPClientServiceType) {
+  setMCPClientService(service: MCPClientService) {
     this.mcpClientService = service;
   }
 
@@ -164,7 +163,7 @@ export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
     }
   }
 
-  async getMCPServerStatus(): Promise<MCPServerStatusData> {
+  async getMCPServerStatus(): Promise<K8sMCPServerStatusData> {
     if (!this.mcpClientService) {
       return {
         total: 0,
@@ -191,7 +190,7 @@ export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
     }
   }
 
-  getAvailableTools(): ServerTool[] {
+  getAvailableTools(): K8sServerTool[] {
     if (!this.mcpClientService) {
       return [];
     }

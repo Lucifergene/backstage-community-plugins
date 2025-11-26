@@ -15,8 +15,26 @@
  */
 
 // =============================================================================
+// Re-export common types from mcp-chat-backend
+// =============================================================================
+
+export type {
+  ChatMessage,
+  ChatResponse,
+  Tool,
+  ToolCall,
+  ProviderConfig,
+  ProviderConnectionStatus,
+  ProviderInfo,
+  ProviderStatusData,
+  ToolExecutionResult,
+} from '@lucifergene/plugin-mcp-chat-backend';
+
+// =============================================================================
 // Log Explanation API Types
 // =============================================================================
+
+import type { ChatMessage } from '@lucifergene/plugin-mcp-chat-backend';
 
 export interface LogExplainRequest {
   resourceType: string; // 'Pod', 'Deployment', etc.
@@ -26,9 +44,20 @@ export interface LogExplainRequest {
   messages: ChatMessage[]; // Conversation history
 }
 
+export interface LogExplainResponse {
+  role: 'assistant';
+  content: string; // AI explanation
+  toolsUsed?: string[]; // Tools called (e.g., ['kubectl_logs'])
+  toolResponses?: any[]; // Raw tool responses
+}
+
 // =============================================================================
 // YAML Generation API Types
 // =============================================================================
+
+export interface RagConfig {
+  topK?: number; // Number of documents to retrieve (default: 3)
+}
 
 export interface YamlGenerateRequest {
   messages: ChatMessage[]; // Conversation history
@@ -47,10 +76,6 @@ export interface YamlGenerateResponse {
 // General Chat API Types
 // =============================================================================
 
-export interface RagConfig {
-  topK?: number; // Number of documents to retrieve (default: 3)
-}
-
 export interface GeneralChatRequest {
   messages: ChatMessage[]; // Conversation history
   enableMCPTools: boolean; // Whether to enable K8s MCP tools
@@ -66,36 +91,6 @@ export interface GeneralChatResponse {
   ragContext?: string[]; // Documents used from RAG
 }
 
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | null;
-  tool_calls?: any[];
-  tool_call_id?: string;
-}
-
-export interface LogExplainResponse {
-  role: 'assistant';
-  content: string; // AI explanation
-  toolsUsed?: string[]; // Tools called (e.g., ['kubectl_logs'])
-  toolResponses?: any[]; // Raw tool responses
-}
-
-// =============================================================================
-// LLM Provider Configuration Types
-// =============================================================================
-
-// Note: We extend the ProviderConfig from mcp-chat-backend with embedding-specific fields
-// The base ProviderConfig is used for LLM providers, while we add embedding fields for RAG
-export interface ProviderConfig {
-  type: string;
-  apiKey?: string;
-  baseUrl: string;
-  model: string;
-  // K8s-specific extensions for embedding providers
-  embeddingModel?: string;
-  dimensions?: number;
-}
-
 // =============================================================================
 // K8s Server Configuration Types
 // =============================================================================
@@ -104,76 +99,6 @@ export interface K8sServerConfig {
   npxCommand?: string;
   scriptPath?: string;
   env?: Record<string, string>;
-}
-
-// =============================================================================
-// Tool Types
-// =============================================================================
-
-export interface Tool {
-  type: 'function';
-  function: {
-    name: string;
-    description: string;
-    parameters: any;
-  };
-}
-
-export interface ToolCall {
-  id: string;
-  type: 'function';
-  function: {
-    name: string;
-    arguments: string;
-  };
-}
-
-// =============================================================================
-// Chat Response Types
-// =============================================================================
-
-export interface ChatResponse {
-  choices: [
-    {
-      message: {
-        role: 'assistant';
-        content: string | null;
-        tool_calls?: ToolCall[];
-      };
-    },
-  ];
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-// =============================================================================
-// Provider Status Types
-// =============================================================================
-
-export interface ProviderConnectionStatus {
-  connected: boolean;
-  models?: string[];
-  error?: string;
-}
-
-export interface Provider {
-  id: string;
-  model: string;
-  baseUrl?: string;
-  connection: ProviderConnectionStatus;
-}
-
-export interface ProviderStatusData {
-  providers: Provider[];
-  summary: {
-    totalProviders: number;
-    healthyProviders: number;
-    error?: string;
-  };
-  timestamp: string;
 }
 
 // =============================================================================
@@ -206,7 +131,7 @@ export interface VectorStoreStatusData {
 }
 
 // =============================================================================
-// MCP Server Status Types
+// MCP Server Status Types (K8s-specific view)
 // =============================================================================
 
 export interface MCPServerStatus {
@@ -220,7 +145,7 @@ export interface MCPServerStatus {
   };
 }
 
-export interface MCPServerStatusData {
+export interface K8sMCPServerStatusData {
   total: number;
   valid: number;
   active: number;
@@ -229,10 +154,10 @@ export interface MCPServerStatusData {
 }
 
 // =============================================================================
-// Tool Types
+// K8s Server Tool Types (differs from mcp-chat-backend ServerTool)
 // =============================================================================
 
-export interface ServerTool {
+export interface K8sServerTool {
   name: string;
   description: string;
   serverId: string;

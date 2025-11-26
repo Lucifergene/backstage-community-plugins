@@ -17,13 +17,13 @@
 import {
   ProviderStatusData,
   VectorStoreStatusData,
-  MCPServerStatusData,
-  ServerTool,
+  K8sMCPServerStatusData,
+  K8sServerTool,
 } from '../types';
 
 export interface K8sAiAssistantService {
   getProviderStatus(): Promise<ProviderStatusData>;
   getVectorStoreStatus(): Promise<VectorStoreStatusData>;
-  getMCPServerStatus(): Promise<MCPServerStatusData>;
-  getAvailableTools(): ServerTool[];
+  getMCPServerStatus(): Promise<K8sMCPServerStatusData>;
+  getAvailableTools(): K8sServerTool[];
 }

@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 import { LoggerService } from '@backstage/backend-plugin-api';
-import { LogExplainRequest, LogExplainResponse } from '../types';
+import {
+  type MCPClientService,
+  type ToolCall,
+} from '@lucifergene/plugin-mcp-chat-backend';
+import { LogExplainRequest, LogExplainResponse, ChatMessage } from '../types';
 import { SYSTEM_PROMPTS } from '../constants/systemPrompts';
-
-// Type for MCPClientService - using 'any' as workaround until exports are added
-// See EXPORT_IMPROVEMENTS.md in mcp-chat-backend for the export plan
-type MCPClientServiceType = any;
 
 export class K8sLogService {
   private readonly logger: LoggerService;
-  private readonly mcpClientService: MCPClientServiceType;
+  private readonly mcpClientService: MCPClientService;
   private readonly systemPrompt: string;
 
   constructor(options: {
     logger: LoggerService;
-    mcpClientService: MCPClientServiceType;
+    mcpClientService: MCPClientService;
   }) {
     this.logger = options.logger;
     this.mcpClientService = options.mcpClientService;
@@ -55,11 +55,11 @@ export class K8sLogService {
     const isInitialRequest =
       request.messages.length === 1 && request.messages[0].role === 'user';
 
-    let messages: any[];
+    let messages: ChatMessage[];
 
     if (isInitialRequest) {
       // First message: Add system context and initial user message
-      const systemMessage = {
+      const systemMessage: ChatMessage = {
         role: 'system',
         content: `${this.systemPrompt}
 
@@ -72,7 +72,7 @@ Context:
       };
 
       // Create user message requesting log analysis
-      const userMessage = {
+      const userMessage: ChatMessage = {
         role: 'user',
         content: `Please fetch the logs for pod "${
           request.resourceName
@@ -96,10 +96,6 @@ Context:
       }));
     }
 
-    // Enable all MCP servers (empty array = all tools available)
-    // The MCPClientService filters by server IDs, not tool names
-    const enabledServers: string[] = [];
-
     this.logger.info(
       `Processing log analysis request for ${request.resourceType}/${
         request.resourceName
@@ -110,16 +106,18 @@ Context:
 
     try {
       // Use MCPClientService to process the query (it will call tools as needed)
-      const response = await this.mcpClientService.processQuery(
+      // Pass undefined to enable all MCP servers (empty array would disable all)
+      const response = await (this.mcpClientService as any).processQuery(
         messages,
-        enabledServers,
+        undefined,
       );
 
       // Map QueryResponse (reply, toolCalls, toolResponses) to LogExplainResponse format
       return {
         role: 'assistant',
         content: response.reply,
-        toolsUsed: response.toolCalls?.map((tc: any) => tc.function.name) || [],
+        toolsUsed:
+          response.toolCalls?.map((tc: ToolCall) => tc.function.name) || [],
         toolResponses: response.toolResponses || [],
       };
     } catch (error) {
