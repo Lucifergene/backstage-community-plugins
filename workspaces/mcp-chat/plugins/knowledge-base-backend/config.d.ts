@@ -81,7 +81,7 @@ export interface Config {
        * Additional configuration options
        * @visibility backend
        */
-      config?: Record<string, string>;
+      config?: { [key: string]: string };
     }>;
   };
 }

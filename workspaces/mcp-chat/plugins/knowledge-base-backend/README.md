@@ -18,7 +18,7 @@ This plugin is designed to be used as a dependency by other Backstage plugins.
 # In your plugin's package.json
 {
   "dependencies": {
-    "@internal/backstage-plugin-knowledge-base-backend": "workspace:^"
+    "@lucifergene/plugin-knowledge-base-backend": "workspace:^"
   }
 }
 ```
@@ -39,7 +39,7 @@ knowledgeBase:
       token: ${OPENAI_API_KEY}
       model: text-embedding-3-small
       dimensions: 1536
-  
+
   # Vector stores (first in array is active)
   vectorStores:
     - id: pinecone
@@ -55,7 +55,7 @@ knowledgeBase:
 ### In Your Plugin
 
 ```typescript
-import { getKnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
+import { getKnowledgeBaseService } from '@lucifergene/plugin-knowledge-base-backend';
 
 export const yourPlugin = createBackendPlugin({
   pluginId: 'your-plugin',
@@ -68,36 +68,39 @@ export const yourPlugin = createBackendPlugin({
       async init({ logger, config }) {
         // Get knowledge base service
         const kbService = await getKnowledgeBaseService({ logger, config });
-        
+
         // Upload documents
-        await kbService.uploadDocuments([
+        await kbService.uploadDocuments(
+          [
+            {
+              fileName: 'example.yaml',
+              content: 'apiVersion: v1\nkind: Pod\n...',
+            },
+          ],
           {
-            fileName: 'example.yaml',
-            content: 'apiVersion: v1\nkind: Pod\n...'
-          }
-        ], {
-          maxChunkLength: 1000,
-          chunkOverlap: 200,
-          delimiter: '\n'
-        });
-        
+            maxChunkLength: 1000,
+            chunkOverlap: 200,
+            delimiter: '\n',
+          },
+        );
+
         // Search knowledge base
         const results = await kbService.search('kubernetes deployment', {
           topK: 3,
-          filter: { format: 'yaml' }
+          filter: { format: 'yaml' },
         });
-        
+
         // List documents
         const docs = await kbService.listDocuments();
-        
+
         // Delete document
         await kbService.deleteDocument('example.yaml');
-        
+
         // Get status
         const status = await kbService.getStatus();
-      }
+      },
     });
-  }
+  },
 });
 ```
 
@@ -105,17 +108,17 @@ export const yourPlugin = createBackendPlugin({
 
 ### Embedding Providers
 
-| Provider | Models | Dimensions |
-|----------|--------|------------|
-| **Gemini** | `gemini-embedding-001`, `text-embedding-004` | 768-3072 |
-| **OpenAI** | `text-embedding-3-small`, `text-embedding-3-large`, `text-embedding-ada-002` | 1536-3072 |
+| Provider   | Models                                                                       | Dimensions |
+| ---------- | ---------------------------------------------------------------------------- | ---------- |
+| **Gemini** | `gemini-embedding-001`, `text-embedding-004`                                 | 768-3072   |
+| **OpenAI** | `text-embedding-3-small`, `text-embedding-3-large`, `text-embedding-ada-002` | 1536-3072  |
 
 ### Vector Stores
 
-| Provider | Type | Notes |
-|----------|------|-------|
-| **Pinecone** | Managed | Requires API key and index creation |
-| **ChromaDB** | Self-hosted | Requires running ChromaDB instance |
+| Provider     | Type        | Notes                               |
+| ------------ | ----------- | ----------------------------------- |
+| **Pinecone** | Managed     | Requires API key and index creation |
+| **ChromaDB** | Self-hosted | Requires running ChromaDB instance  |
 
 ## API Reference
 
@@ -123,11 +126,11 @@ export const yourPlugin = createBackendPlugin({
 
 ```typescript
 interface KnowledgeBaseService {
-  uploadDocuments(files, settings): Promise<UploadedDocument[]>
-  listDocuments(namespace?): Promise<DocumentInfo[]>
-  deleteDocument(fileName, namespace?): Promise<{deletedCount: number}>
-  search(query, options?): Promise<SearchResult[]>
-  getStatus(): Promise<KnowledgeBaseStatus>
+  uploadDocuments(files, settings): Promise<UploadedDocument[]>;
+  listDocuments(namespace?): Promise<DocumentInfo[]>;
+  deleteDocument(fileName, namespace?): Promise<{ deletedCount: number }>;
+  search(query, options?): Promise<SearchResult[]>;
+  getStatus(): Promise<KnowledgeBaseStatus>;
 }
 ```
 
@@ -136,10 +139,11 @@ interface KnowledgeBaseService {
 If you're migrating from the old embedded RAG implementation:
 
 1. Update `package.json`:
+
 ```json
 {
   "dependencies": {
-    "@internal/backstage-plugin-knowledge-base-backend": "workspace:^"
+    "@lucifergene/plugin-knowledge-base-backend": "workspace:^"
   }
 }
 ```
@@ -147,19 +151,28 @@ If you're migrating from the old embedded RAG implementation:
 2. Update configuration namespace from `k8sAiAssistant` to `knowledgeBase`
 
 3. Replace imports:
+
 ```typescript
 // Before
 import { DocumentService } from '../services/DocumentService';
 import { EmbeddingProvider } from '../providers/base-embedding-provider';
 
 // After
-import { KnowledgeBaseService, getKnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
+import {
+  KnowledgeBaseService,
+  getKnowledgeBaseService,
+} from '@lucifergene/plugin-knowledge-base-backend';
 ```
 
 4. Update service initialization:
+
 ```typescript
 // Before
-const documentService = new DocumentService(embeddingProvider, vectorStore, logger);
+const documentService = new DocumentService(
+  embeddingProvider,
+  vectorStore,
+  logger,
+);
 
 // After
 const knowledgeBaseService = await getKnowledgeBaseService({ logger, config });
@@ -176,4 +189,3 @@ const knowledgeBaseService = await getKnowledgeBaseService({ logger, config });
 ## License
 
 Apache-2.0
-
