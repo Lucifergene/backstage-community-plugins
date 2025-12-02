@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import Typography from '@material-ui/core/Typography';
-import AddIcon from '@material-ui/icons/Add';
 import AddCommentIcon from '@material-ui/icons/AddComment';
 import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
@@ -107,13 +106,11 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
 
   // State management hooks
   const { messages, addMessage, clearMessages } = useChatState();
-  const { activeTool, setActiveTool, getToolState, updateToolState } =
-    useToolState();
+  const { activeTool, setActiveTool } = useToolState();
   const { overlay, openEditor, closeEditor, updateContent } = useOverlayState();
 
   // Local state
   const [isTyping, setIsTyping] = useState(false);
-  const [lastYamlGenerated, setLastYamlGenerated] = useState<string>('');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Universal toggles (above chat)
@@ -165,7 +162,7 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
   // Handle clear conversation
   const handleClear = useCallback(() => {
     clearMessages();
-    setActiveTool(null);
+    setActiveTool('');
   }, [clearMessages, setActiveTool]);
 
   // Pod Log Analysis Handler
@@ -264,11 +261,6 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
         };
 
         addMessage(assistantMessage);
-
-        // Save last YAML for editor
-        if (response.yamlBlocks && response.yamlBlocks.length > 0) {
-          setLastYamlGenerated(response.yamlBlocks[0]);
-        }
       } catch (error) {
         const errorMessage: UnifiedMessage = {
           id: `msg-${Date.now() + 1}`,
@@ -402,11 +394,6 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
           };
 
           addMessage(assistantMessage);
-
-          // Save last YAML for editor
-          if (response.yamlBlocks && response.yamlBlocks.length > 0) {
-            setLastYamlGenerated(response.yamlBlocks[0]);
-          }
         }
       } catch (error) {
         const errorMessage: UnifiedMessage = {
@@ -436,7 +423,7 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
 
   // Handle interactive component actions
   const handleInteractiveAction = useCallback(
-    async (messageId: string, action: string, payload: any) => {
+    async (_messageId: string, action: string, payload: any) => {
       if (action === 'analyze-logs') {
         await handlePodLogAnalyze(
           payload.podName,
@@ -452,18 +439,8 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
   );
 
   // Enhanced message rendering with YAML action buttons
-  const enhancedMessages = React.useMemo(() => {
-    return messages.map(msg => {
-      // Store last YAML for quick access
-      if (
-        msg.yamlBlocks &&
-        msg.yamlBlocks.length > 0 &&
-        msg.role === 'assistant'
-      ) {
-        setLastYamlGenerated(msg.yamlBlocks[0]);
-      }
-      return msg;
-    });
+  const enhancedMessages = useMemo(() => {
+    return messages;
   }, [messages]);
 
   return (
@@ -527,13 +504,12 @@ export const UnifiedChatLayout: React.FC<UnifiedChatLayoutProps> = ({
             onToolSelect={handleToolSelect}
             onOpenYamlEditor={handleOpenYamlEditor}
             disabled={isTyping}
-            placeholder={
-              activeTool === 'yaml-gen'
-                ? 'Ask me to generate Kubernetes YAML...'
-                : activeTool === 'pod-logs'
-                ? 'Ask about logs...'
-                : 'Ask about Kubernetes...'
-            }
+            placeholder={(() => {
+              if (activeTool === 'yaml-gen')
+                return 'Ask me to generate Kubernetes YAML...';
+              if (activeTool === 'pod-logs') return 'Ask about logs...';
+              return 'Ask about Kubernetes...';
+            })()}
           />
         </Box>
 

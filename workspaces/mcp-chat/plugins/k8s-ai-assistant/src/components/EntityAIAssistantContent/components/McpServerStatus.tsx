@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -97,12 +96,12 @@ export const McpServerStatus = ({
     return 'None';
   };
 
-  const getDotColor = () => {
-    if (loading) return 'default';
-    if (isError) return 'error';
-    if (hasActiveServers) return 'success';
-    if (total > 0) return 'warning';
-    return 'default';
+  const getDotColor = (): string => {
+    if (loading) return '#9e9e9e'; // grey
+    if (isError) return '#f44336'; // error red
+    if (hasActiveServers) return '#4caf50'; // success green
+    if (total > 0) return '#ff9800'; // warning orange
+    return '#9e9e9e'; // grey
   };
 
   const getTooltipTitle = () => {
@@ -117,9 +116,7 @@ export const McpServerStatus = ({
     return 'No MCP servers configured.';
   };
 
-  const displayServers = loading
-    ? 'Loading...'
-    : `${active}/${total} servers`;
+  const displayServers = loading ? 'Loading...' : `${active}/${total} servers`;
 
   const displayTools = loading ? 'Loading...' : `${toolCount} tools`;
 
@@ -147,8 +144,7 @@ export const McpServerStatus = ({
               color={hasActiveServers ? 'primary' : 'default'}
               icon={
                 <FiberManualRecordIcon
-                  style={{ fontSize: 10 }}
-                  color={getDotColor()}
+                  style={{ fontSize: 10, color: getDotColor() }}
                 />
               }
               style={{ cursor: 'help' }}
@@ -170,4 +166,3 @@ export const McpServerStatus = ({
     </Box>
   );
 };
-

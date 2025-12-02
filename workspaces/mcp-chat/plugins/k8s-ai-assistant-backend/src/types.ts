@@ -28,13 +28,13 @@ export type {
   ProviderInfo,
   ProviderStatusData,
   ToolExecutionResult,
-} from '@lucifergene/plugin-mcp-chat-backend';
+} from '@backstage-community/plugin-mcp-chat-backend';
 
 // =============================================================================
 // Log Explanation API Types
 // =============================================================================
 
-import type { ChatMessage } from '@lucifergene/plugin-mcp-chat-backend';
+import type { ChatMessage } from '@backstage-community/plugin-mcp-chat-backend';
 
 export interface LogExplainRequest {
   resourceType: string; // 'Pod', 'Deployment', etc.

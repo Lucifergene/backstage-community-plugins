@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -110,8 +110,11 @@ const useStyles = makeStyles(theme => ({
 interface MessageListProps {
   messages: UnifiedMessage[];
   isTyping?: boolean;
-  emptyStateMessage?: string;
-  onInteractiveAction?: (messageId: string, action: string, payload: any) => void;
+  onInteractiveAction?: (
+    messageId: string,
+    action: string,
+    payload: any,
+  ) => void;
   onToolSelect?: (toolId: string) => void;
   onOpenYamlEditor?: (yaml: string) => void;
 }
@@ -119,7 +122,6 @@ interface MessageListProps {
 export const MessageList: React.FC<MessageListProps> = ({
   messages,
   isTyping = false,
-  emptyStateMessage = 'Start a conversation...',
   onInteractiveAction,
   onToolSelect,
   onOpenYamlEditor,
@@ -175,18 +177,22 @@ export const MessageList: React.FC<MessageListProps> = ({
           onOpenYamlEditor={onOpenYamlEditor}
         />
         {/* Render interactive component if present - aligned with bot message */}
-        {message.interactiveComponent && message.interactiveData && onInteractiveAction && (
-          <Box display="flex" alignItems="flex-start" gap={2}>
-            <Box width={32} flexShrink={0} />
-            <Box flex={1}>
-              <InteractiveMessageContent
-                type={message.interactiveComponent}
-                data={message.interactiveData}
-                onAction={(action, payload) => onInteractiveAction(message.id, action, payload)}
-              />
+        {message.interactiveComponent &&
+          message.interactiveData &&
+          onInteractiveAction && (
+            <Box display="flex" alignItems="flex-start" style={{ gap: 16 }}>
+              <Box width={32} flexShrink={0} />
+              <Box flex={1}>
+                <InteractiveMessageContent
+                  type={message.interactiveComponent}
+                  data={message.interactiveData}
+                  onAction={(action, payload) =>
+                    onInteractiveAction(message.id, action, payload)
+                  }
+                />
+              </Box>
             </Box>
-          </Box>
-        )}
+          )}
       </Box>,
     );
 
@@ -201,12 +207,13 @@ export const MessageList: React.FC<MessageListProps> = ({
             Welcome to Kubernetes AI Assistant
           </Typography>
           <Typography variant="body2" className={classes.welcomeSubtitle}>
-            Ask me anything about Kubernetes, troubleshooting, or best practices.
+            Ask me anything about Kubernetes, troubleshooting, or best
+            practices.
           </Typography>
           <Typography variant="body2" className={classes.welcomeSubtitle}>
             Start chatting below or select one of the tools to get started.
           </Typography>
-          
+
           {/* Tool Cards */}
           <Box className={classes.toolCardsGrid}>
             {TOOL_REGISTRY.map(tool => (
@@ -217,7 +224,9 @@ export const MessageList: React.FC<MessageListProps> = ({
               >
                 <Box className={classes.toolIcon}>{tool.icon}</Box>
                 <Box className={classes.toolTextContainer}>
-                  <Typography className={classes.toolName}>{tool.name}</Typography>
+                  <Typography className={classes.toolName}>
+                    {tool.name}
+                  </Typography>
                   <Typography className={classes.toolDescription}>
                     • {tool.description}
                   </Typography>
@@ -240,4 +249,3 @@ export const MessageList: React.FC<MessageListProps> = ({
     </Box>
   );
 };
-

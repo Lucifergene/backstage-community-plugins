@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -23,7 +23,6 @@ import Button from '@material-ui/core/Button';
 import CloseIcon from '@material-ui/icons/Close';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import GetAppIcon from '@material-ui/icons/GetApp';
-import SaveIcon from '@material-ui/icons/Save';
 import Editor from '@monaco-editor/react';
 
 const useStyles = makeStyles(theme => ({
@@ -78,14 +77,13 @@ interface YamlEditorOverlayProps {
 export const YamlEditorOverlay: React.FC<YamlEditorOverlayProps> = ({
   yaml,
   onClose,
-  onSave,
 }) => {
   const classes = useStyles();
   const [yamlContent, setYamlContent] = useState(yaml);
   const editorRef = useRef<any>(null);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(yamlContent);
+    window.navigator.clipboard.writeText(yamlContent);
   };
 
   const handleDownload = () => {
@@ -96,13 +94,6 @@ export const YamlEditorOverlay: React.FC<YamlEditorOverlayProps> = ({
     a.download = 'kubernetes-manifest.yaml';
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handleSave = () => {
-    if (onSave) {
-      onSave(yamlContent);
-    }
-    onClose();
   };
 
   return (
@@ -156,4 +147,3 @@ export const YamlEditorOverlay: React.FC<YamlEditorOverlayProps> = ({
     </Box>
   );
 };
-

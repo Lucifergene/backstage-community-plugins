@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -104,10 +103,10 @@ export const ProviderStatus = ({
     return 'Disconnected';
   };
 
-  const getDotColor = () => {
-    if (loading) return 'warning';
-    if (isConnected) return 'success';
-    return 'error';
+  const getDotColor = (): string => {
+    if (loading) return '#ff9800'; // warning orange
+    if (isConnected) return '#4caf50'; // success green
+    return '#f44336'; // error red
   };
 
   const getTooltipTitle = () => {
@@ -118,20 +117,25 @@ export const ProviderStatus = ({
         : '';
       return `Successfully connected. ${modelsText}`;
     }
-    return `Connection failed: ${connectionInfo?.error || error || 'Unknown error'}`;
+    return `Connection failed: ${
+      connectionInfo?.error || error || 'Unknown error'
+    }`;
   };
 
-  const displayModel = loading
-    ? 'Loading...'
-    : error && !data
-      ? 'Error'
-      : primaryProvider?.model || 'Not available';
+  const getDisplayModel = () => {
+    if (loading) return 'Loading...';
+    if (error && !data) return 'Error';
+    return primaryProvider?.model || 'Not available';
+  };
 
-  const displayUrl = loading
-    ? 'Loading...'
-    : error && !data
-      ? 'Error'
-      : primaryProvider?.baseUrl || 'Not specified';
+  const getDisplayUrl = () => {
+    if (loading) return 'Loading...';
+    if (error && !data) return 'Error';
+    return primaryProvider?.baseUrl || 'Not specified';
+  };
+
+  const displayModel = getDisplayModel();
+  const displayUrl = getDisplayUrl();
 
   const errorMessage = connectionInfo?.error || error;
 
@@ -154,8 +158,7 @@ export const ProviderStatus = ({
               color={isConnected ? 'primary' : 'default'}
               icon={
                 <FiberManualRecordIcon
-                  style={{ fontSize: 10 }}
-                  color={getDotColor()}
+                  style={{ fontSize: 10, color: getDotColor() }}
                 />
               }
               style={{ cursor: 'help' }}
@@ -178,4 +181,3 @@ export const ProviderStatus = ({
     </Box>
   );
 };
-

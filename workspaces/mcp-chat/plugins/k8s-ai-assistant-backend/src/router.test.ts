@@ -21,12 +21,14 @@ import { createRouter } from './router';
 import { K8sLogService } from './services/K8sLogService';
 import { K8sYamlService } from './services/K8sYamlService';
 import { K8sAiAssistantService } from './services/K8sAiAssistantService';
+import { K8sGeneralChatService } from './services/K8sGeneralChatService';
 
 describe('createRouter', () => {
   let app: express.Express;
   let mockK8sAiAssistantService: jest.Mocked<K8sAiAssistantService>;
   let mockK8sLogService: jest.Mocked<K8sLogService>;
   let mockK8sYamlService: jest.Mocked<K8sYamlService>;
+  let mockK8sGeneralChatService: jest.Mocked<K8sGeneralChatService>;
 
   beforeEach(async () => {
     mockK8sLogService = {
@@ -37,6 +39,10 @@ describe('createRouter', () => {
 
     mockK8sYamlService = {
       generateYaml: jest.fn(),
+    } as any;
+
+    mockK8sGeneralChatService = {
+      sendChatMessage: jest.fn(),
     } as any;
 
     mockK8sAiAssistantService = {
@@ -96,6 +102,8 @@ describe('createRouter', () => {
       k8sAiAssistantService: mockK8sAiAssistantService,
       k8sLogService: mockK8sLogService,
       k8sYamlService: mockK8sYamlService,
+      k8sGeneralChatService: mockK8sGeneralChatService,
+      knowledgeBaseService: null,
     });
     app = express();
     app.use(router);
@@ -184,6 +192,8 @@ describe('createRouter', () => {
       k8sAiAssistantService: mockServiceNoVectorStore,
       k8sLogService: mockK8sLogService,
       k8sYamlService: mockK8sYamlService,
+      k8sGeneralChatService: mockK8sGeneralChatService,
+      knowledgeBaseService: null,
     });
     const appNoConfig = express();
     appNoConfig.use(routerNoConfig);

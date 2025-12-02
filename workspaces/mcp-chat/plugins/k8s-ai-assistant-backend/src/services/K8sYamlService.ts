@@ -18,7 +18,7 @@ import {
   LoggerService,
   RootConfigService,
 } from '@backstage/backend-plugin-api';
-import { type LLMProvider } from '@lucifergene/plugin-mcp-chat-backend';
+import { type LLMProvider } from '@backstage-community/plugin-mcp-chat-backend';
 import {
   YamlGenerateRequest,
   YamlGenerateResponse,

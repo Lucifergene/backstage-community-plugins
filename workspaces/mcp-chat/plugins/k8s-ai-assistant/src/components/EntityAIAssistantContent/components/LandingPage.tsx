@@ -13,37 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { useState, useEffect } from 'react';
-import {
-  Grid,
-  Button,
-  Typography,
-  Box,
-  Chip,
-  Divider,
-  LinearProgress,
-  makeStyles,
-  IconButton,
-} from '@material-ui/core';
+import { useState, useEffect } from 'react';
+import { Grid, Button, Typography, Box, IconButton } from '@material-ui/core';
 import StorageIcon from '@material-ui/icons/Storage';
 import SettingsIcon from '@material-ui/icons/Settings';
-import DescriptionIcon from '@material-ui/icons/Description';
-import CloudIcon from '@material-ui/icons/Cloud';
-import TrendingUpIcon from '@material-ui/icons/TrendingUp';
 import CloseIcon from '@material-ui/icons/Close';
 import { useApi } from '@backstage/core-plugin-api';
-import {
-  InfoCard,
-  TabbedLayout,
-  StructuredMetadataTable,
-} from '@backstage/core-components';
 import { k8sAiAssistantApiRef } from '../../../api';
 import { ProviderStatus } from './ProviderStatus';
 import { VectorStoreStatus } from './VectorStoreStatus';
 import { McpServerStatus } from './McpServerStatus';
-import { ExplainLogsTab } from './ExplainLogsTab';
-import { GenerateYamlTab } from './GenerateYamlTab';
-import { AiAssistantChatTab } from './AiAssistantChatTab';
 import { KnowledgeBaseTab } from './KnowledgeBaseTab';
 import { UnifiedChatLayout } from './UnifiedChatLayout';
 import { K8sResource } from '../utils';
@@ -52,34 +31,7 @@ import {
   VectorStoreStatusData,
   MCPServerStatusData,
   ToolsResponse,
-  ListDocumentsResponse,
 } from '../../../types';
-
-const useStyles = makeStyles(theme => ({
-  statCard: {
-    padding: theme.spacing(1.5),
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: theme.palette.background.default,
-    border: `1px solid ${theme.palette.divider}`,
-    textAlign: 'center',
-    minHeight: 80,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: theme.palette.primary.main,
-    marginBottom: theme.spacing(0.5),
-  },
-  statLabel: {
-    fontSize: '0.75rem',
-    color: theme.palette.text.secondary,
-  },
-}));
-
 
 interface LandingPageProps {
   k8sResources: K8sResource[];
@@ -87,7 +39,6 @@ interface LandingPageProps {
 
 export const LandingPage = ({ k8sResources }: LandingPageProps) => {
   const k8sApi = useApi(k8sAiAssistantApiRef);
-  const classes = useStyles();
 
   // State for provider status
   const [providerData, setProviderData] = useState<ProviderStatusData | null>(
@@ -111,20 +62,19 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
 
   // State for Knowledge Base drawer
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [documentsData, setDocumentsData] =
-    useState<ListDocumentsResponse | null>(null);
-  const [documentsLoading, setDocumentsLoading] = useState(true);
-  
+
   // State for fullscreen chat
   const [isChatFullscreen, setIsChatFullscreen] = useState(false);
 
   useEffect(() => {
     // Helper function to check if error is 503 (service still initializing)
     const isServiceUnavailable = (err: any): boolean => {
-      return err?.message?.includes('503') || 
-             err?.response?.status === 503 ||
-             err?.message?.includes('Service has not started up yet') ||
-             err?.message?.includes('Service Unavailable');
+      return (
+        err?.message?.includes('503') ||
+        err?.response?.status === 503 ||
+        err?.message?.includes('Service has not started up yet') ||
+        err?.message?.includes('Service Unavailable')
+      );
     };
 
     // Helper function to retry with exponential backoff
@@ -168,7 +118,9 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
     // Fetch vector store status with retry
     const fetchVectorStoreStatus = async () => {
       try {
-        const data = await retryWithBackoff(() => k8sApi.getVectorStoreStatus());
+        const data = await retryWithBackoff(() =>
+          k8sApi.getVectorStoreStatus(),
+        );
         setVectorStoreData(data);
         setVectorStoreError(null);
       } catch (err) {
@@ -203,22 +155,9 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
       }
     };
 
-    // Fetch documents for Knowledge Base summary with retry
-    const fetchDocuments = async () => {
-      try {
-        const data = await retryWithBackoff(() => k8sApi.listDocuments());
-        setDocumentsData(data);
-      } catch (err) {
-        // Silently fail - KB might not be configured
-      } finally {
-        setDocumentsLoading(false);
-      }
-    };
-
     fetchProviderStatus();
     fetchVectorStoreStatus();
     fetchMcpStatus();
-    fetchDocuments();
   }, [k8sApi]);
 
   return (
@@ -282,7 +221,7 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
       {/* Unified AI Chat Interface */}
       <Grid item xs={12}>
         <Box>
-          <UnifiedChatLayout 
+          <UnifiedChatLayout
             k8sResources={k8sResources}
             onFullscreenChange={setIsChatFullscreen}
           />
@@ -364,4 +303,3 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
     </Grid>
   );
 };
-

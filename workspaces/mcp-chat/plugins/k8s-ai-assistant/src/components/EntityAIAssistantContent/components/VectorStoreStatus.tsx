@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
@@ -111,11 +110,11 @@ export const VectorStoreStatus = ({
     return 'Unknown';
   };
 
-  const getDotColor = () => {
-    if (loading) return 'default';
-    if (!configured) return 'warning';
-    if (isConnected && isHealthy) return 'success';
-    return 'error';
+  const getDotColor = (): string => {
+    if (loading) return '#9e9e9e'; // grey
+    if (!configured) return '#ff9800'; // warning orange
+    if (isConnected && isHealthy) return '#4caf50'; // success green
+    return '#f44336'; // error red
   };
 
   const getTooltipTitle = () => {
@@ -128,32 +127,44 @@ export const VectorStoreStatus = ({
         : 'No chunks indexed yet.';
       return `Vector store connected. ${chunksText}`;
     }
-    return `Error: ${data?.summary?.error || vectorStore?.connection?.error || error || 'Unknown error'}`;
+    return `Error: ${
+      data?.summary?.error ||
+      vectorStore?.connection?.error ||
+      error ||
+      'Unknown error'
+    }`;
   };
 
-  const displayEmbedding = loading
-    ? 'Loading...'
-    : !configured
-      ? 'Not configured'
-      : vectorStore?.embeddingModel
-        ? `${vectorStore.embeddingModel} (${vectorStore.embeddingDimensions}d)`
-        : 'Not available';
+  const getDisplayEmbedding = () => {
+    if (loading) return 'Loading...';
+    if (!configured) return 'Not configured';
+    if (vectorStore?.embeddingModel) {
+      return `${vectorStore.embeddingModel} (${vectorStore.embeddingDimensions}d)`;
+    }
+    return 'Not available';
+  };
 
-  const displayIndex = loading
-    ? 'Loading...'
-    : !configured
-      ? 'Not configured'
-      : vectorStore?.indexName
-        ? `${vectorStore.id}/${vectorStore.indexName}`
-        : 'Not available';
+  const getDisplayIndex = () => {
+    if (loading) return 'Loading...';
+    if (!configured) return 'Not configured';
+    if (vectorStore?.indexName) {
+      return `${vectorStore.id}/${vectorStore.indexName}`;
+    }
+    return 'Not available';
+  };
 
-  const displayDocuments = loading
-    ? 'Loading...'
-    : !configured
-      ? '0'
-      : vectorStore?.connection?.totalDocuments?.toString() || '0';
+  const getDisplayDocuments = () => {
+    if (loading) return 'Loading...';
+    if (!configured) return '0';
+    return vectorStore?.connection?.totalDocuments?.toString() || '0';
+  };
 
-  const errorMessage = data?.summary?.error || vectorStore?.connection?.error || error;
+  const displayEmbedding = getDisplayEmbedding();
+  const displayIndex = getDisplayIndex();
+  const displayDocuments = getDisplayDocuments();
+
+  const errorMessage =
+    data?.summary?.error || vectorStore?.connection?.error || error;
 
   return (
     <Box className={`${classes.root} ${getBorderClass()}`}>
@@ -176,8 +187,7 @@ export const VectorStoreStatus = ({
               }
               icon={
                 <FiberManualRecordIcon
-                  style={{ fontSize: 10 }}
-                  color={getDotColor()}
+                  style={{ fontSize: 10, color: getDotColor() }}
                 />
               }
               style={{ cursor: 'help' }}
@@ -202,4 +212,3 @@ export const VectorStoreStatus = ({
     </Box>
   );
 };
-
