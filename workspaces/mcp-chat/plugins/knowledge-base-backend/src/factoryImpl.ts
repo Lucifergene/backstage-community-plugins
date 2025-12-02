@@ -14,29 +14,47 @@
  * limitations under the License.
  */
 
-import {
+import type {
   LoggerService,
   RootConfigService,
 } from '@backstage/backend-plugin-api';
-import { KnowledgeBaseService } from './KnowledgeBaseService';
-import { KnowledgeBaseServiceImpl } from './KnowledgeBaseServiceImpl';
-import { DocumentService } from './DocumentService';
-import { EmbeddingProviderFactory } from '../providers/embedding-provider-factory';
+import type { KnowledgeBaseService } from './service/KnowledgeBaseService';
+import { KnowledgeBaseServiceImpl } from './service/KnowledgeBaseServiceImpl';
+import { DocumentService } from './service/DocumentService';
+import { EmbeddingProviderFactory } from './providers/embedding-provider-factory';
 import {
   VectorStoreFactory,
   getVectorStoreConfig,
-} from '../vectorstores/vectorstore-factory';
-import { getEmbeddingProviderConfig } from '../utils/config-helper';
+} from './vectorstores/vectorstore-factory';
+import { getEmbeddingProviderConfig } from './utils/config-helper';
 
 /**
- * Factory function to create a KnowledgeBaseService instance
+ * Options for creating a KnowledgeBaseService
  * @public
  */
-export async function getKnowledgeBaseService(deps: {
+export interface CreateKnowledgeBaseServiceOptions {
   logger: LoggerService;
   config: RootConfigService;
-}): Promise<KnowledgeBaseService> {
-  const { logger, config } = deps;
+}
+
+/**
+ * Factory implementation for creating KnowledgeBaseService instances.
+ * Initializes embedding providers, vector stores, and document services.
+ *
+ * @example
+ * ```typescript
+ * import { createKnowledgeBaseService } from '@internal/plugin-knowledge-base-backend';
+ *
+ * const kbService = await createKnowledgeBaseService({ logger, config });
+ * const results = await kbService.search('kubernetes deployment');
+ * ```
+ *
+ * @public
+ */
+export async function createKnowledgeBaseService(
+  options: CreateKnowledgeBaseServiceOptions,
+): Promise<KnowledgeBaseService> {
+  const { logger, config } = options;
 
   const embeddingConfig = getEmbeddingProviderConfig(config);
   const vectorStoreConfig = getVectorStoreConfig(config);
@@ -72,7 +90,3 @@ export async function getKnowledgeBaseService(deps: {
     logger,
   );
 }
-
-export type { KnowledgeBaseService } from './KnowledgeBaseService';
-export { DocumentService } from './DocumentService';
-export type { ChunkSettings, UploadedDocument } from './DocumentService';

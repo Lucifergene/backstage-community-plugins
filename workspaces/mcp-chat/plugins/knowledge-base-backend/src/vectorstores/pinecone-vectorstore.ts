@@ -17,7 +17,6 @@ import {
   VectorStoreProvider,
   VectorStoreDocument,
   VectorStoreQueryResult,
-  VectorStoreConfig,
 } from './base-vectorstore';
 
 /**
@@ -26,10 +25,6 @@ import {
 export class PineconeVectorStore extends VectorStoreProvider {
   private client: any = null;
   private index: any = null;
-
-  constructor(config: VectorStoreConfig) {
-    super(config);
-  }
 
   async connect(): Promise<void> {
     if (!this.config.apiKey) {
@@ -219,4 +214,3 @@ export class PineconeVectorStore extends VectorStoreProvider {
     return documents;
   }
 }
-

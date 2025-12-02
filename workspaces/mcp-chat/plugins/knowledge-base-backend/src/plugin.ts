@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { createBackendPlugin, coreServices } from '@backstage/backend-plugin-api';
+import {
+  createBackendPlugin,
+  coreServices,
+} from '@backstage/backend-plugin-api';
 import { getKnowledgeBaseService } from './service';
 
 /**
@@ -72,4 +75,3 @@ export const knowledgeBasePlugin = createBackendPlugin({
     });
   },
 });
-
