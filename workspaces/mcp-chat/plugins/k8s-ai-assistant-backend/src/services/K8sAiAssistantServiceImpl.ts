@@ -29,7 +29,7 @@ import {
   K8sMCPServerStatusData,
   K8sServerTool,
 } from '../types';
-import { KnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
+import { KnowledgeBaseService } from '@lucifergene/plugin-knowledge-base-backend';
 
 export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
   private readonly logger: LoggerService;

@@ -5492,7 +5492,7 @@ __metadata:
     "@backstage/errors": "npm:^1.2.7"
     "@backstage/plugin-catalog-node": "npm:^1.17.1"
     "@google/generative-ai": "npm:^0.24.1"
-    "@internal/backstage-plugin-knowledge-base-backend": "workspace:^"
+    "@lucifergene/plugin-knowledge-base-backend": "npm:^0.1.1"
     "@modelcontextprotocol/sdk": "npm:^1.11.0"
     "@types/express": "npm:^4.17.6"
     "@types/supertest": "npm:^2.0.12"
@@ -5536,24 +5536,6 @@ __metadata:
     react-use: "npm:^17.2.4"
   peerDependencies:
     react: ^16.13.1 || ^17.0.0 || ^18.0.0
-  languageName: unknown
-  linkType: soft
-
-"@internal/backstage-plugin-knowledge-base-backend@workspace:^, @internal/backstage-plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend":
-  version: 0.0.0-use.local
-  resolution: "@internal/backstage-plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend"
-  dependencies:
-    "@backstage/backend-defaults": "npm:^0.13.1"
-    "@backstage/backend-plugin-api": "npm:^1.4.0"
-    "@backstage/cli": "npm:^0.33.0"
-    "@backstage/errors": "npm:^1.2.7"
-    "@google/generative-ai": "npm:^0.24.1"
-    "@pinecone-database/pinecone": "npm:^4.0.0"
-    "@types/uuid": "npm:^11.0.0"
-    chromadb: "npm:^1.9.4"
-    node-fetch: "npm:^2.7.0"
-    uuid: "npm:^13.0.0"
-    yaml: "npm:^2.8.1"
   languageName: unknown
   linkType: soft
 
@@ -6112,6 +6094,24 @@ __metadata:
   checksum: 10/cb98c608392abe59457a14e00134e7dfa57c0c9b459871730cd4e907bb12b834cbd03e08ad8663fea9e486f260da7f1293ccd9af0376bf5524dd8536192f248c
   languageName: node
   linkType: hard
+
+"@lucifergene/plugin-knowledge-base-backend@npm:^0.1.1, @lucifergene/plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend":
+  version: 0.0.0-use.local
+  resolution: "@lucifergene/plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend"
+  dependencies:
+    "@backstage/backend-defaults": "npm:^0.13.1"
+    "@backstage/backend-plugin-api": "npm:^1.4.0"
+    "@backstage/cli": "npm:^0.33.0"
+    "@backstage/errors": "npm:^1.2.7"
+    "@google/generative-ai": "npm:^0.24.1"
+    "@pinecone-database/pinecone": "npm:^4.0.0"
+    "@types/uuid": "npm:^11.0.0"
+    chromadb: "npm:^1.9.4"
+    node-fetch: "npm:^2.7.0"
+    uuid: "npm:^13.0.0"
+    yaml: "npm:^2.8.1"
+  languageName: unknown
+  linkType: soft
 
 "@lukeed/csprng@npm:^1.0.0":
   version: 1.1.0

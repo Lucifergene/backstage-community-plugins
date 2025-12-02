@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 export {
-  k8SAiAssistantPlugin,
-  K8SAiAssistantPage,
-  EntityK8sAiAssistantContent,
-  K8sAiAssistantIcon,
-} from './plugin';
-export { k8sAiAssistantApiRef } from './api';
-export type { K8sAiAssistantApi } from './api';
-export * from './types';
+  K8sAiAssistantBotIcon,
+  K8sAiAssistantIconComponent,
+} from './K8sAiAssistantIcon';
+export type { K8sAiAssistantIconProps } from './K8sAiAssistantIcon';
