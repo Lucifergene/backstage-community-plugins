@@ -30,7 +30,7 @@ import {
   ProviderFactory,
   getProviderConfig,
   type MCPServer,
-} from '@lucifergene/plugin-mcp-chat-backend';
+} from '@backstage-community/plugin-mcp-chat-backend';
 
 /**
  * k8SAiAssistantPlugin backend plugin

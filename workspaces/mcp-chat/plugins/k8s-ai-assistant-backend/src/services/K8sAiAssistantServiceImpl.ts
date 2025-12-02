@@ -21,7 +21,7 @@ import {
   ProviderFactory,
   getProviderConfig,
   type MCPClientService,
-} from '@lucifergene/plugin-mcp-chat-backend';
+} from '@backstage-community/plugin-mcp-chat-backend';
 import { K8sAiAssistantService } from './K8sAiAssistantService';
 import {
   ProviderStatusData,
@@ -177,7 +177,17 @@ export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
     // Delegate to MCPClientService to get status of all MCP servers
     try {
       const status = await this.mcpClientService.getMCPServerStatus();
-      return status;
+      // Transform MCPServer[] to MCPServerStatus[] (map type values)
+      const servers = status.servers.map(server => ({
+        id: server.id,
+        name: server.name,
+        type: this.mapServerType(server.type),
+        status: server.status,
+      }));
+      return {
+        ...status,
+        servers,
+      };
     } catch (error) {
       this.logger.error(`Failed to get MCP server status: ${error}`);
       return {
@@ -190,12 +200,27 @@ export class K8sAiAssistantServiceImpl implements K8sAiAssistantService {
     }
   }
 
+  private mapServerType(type: string): 'stdio' | 'http' | 'sse' {
+    // Map MCP server types to K8s expected types
+    if (type === 'stdio') return 'stdio';
+    if (type === 'sse') return 'sse';
+    // streamable-http and any other types map to 'http'
+    return 'http';
+  }
+
   getAvailableTools(): K8sServerTool[] {
     if (!this.mcpClientService) {
       return [];
     }
 
-    // Delegate to MCPClientService to get all available tools
-    return this.mcpClientService.getAvailableTools();
+    // Delegate to MCPClientService and transform to K8sServerTool format
+    const tools = this.mcpClientService.getAvailableTools();
+    return tools.map(tool => ({
+      name: tool.function?.name || '',
+      description: tool.function?.description || '',
+      serverId: tool.serverId,
+      serverName: tool.serverId, // Use serverId as serverName if not available
+      inputSchema: tool.function?.parameters,
+    }));
   }
 }

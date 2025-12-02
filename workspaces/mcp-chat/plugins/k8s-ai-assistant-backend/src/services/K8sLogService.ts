@@ -17,7 +17,7 @@ import { LoggerService } from '@backstage/backend-plugin-api';
 import {
   type MCPClientService,
   type ToolCall,
-} from '@lucifergene/plugin-mcp-chat-backend';
+} from '@backstage-community/plugin-mcp-chat-backend';
 import { LogExplainRequest, LogExplainResponse, ChatMessage } from '../types';
 import { SYSTEM_PROMPTS } from '../constants/systemPrompts';
 

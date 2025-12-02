@@ -13,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  mockCredentials,
-  startTestBackend,
-  mockServices,
-} from '@backstage/backend-test-utils';
+import { startTestBackend, mockServices } from '@backstage/backend-test-utils';
 import { k8SAiAssistantPlugin } from './plugin';
 import request from 'supertest';
 

@@ -1,4 +1,19 @@
-import React, { useState, useEffect } from 'react';
+/*
+ * Copyright 2025 The Backstage Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import { useState, useEffect } from 'react';
 import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
@@ -225,7 +240,6 @@ export const KnowledgeBaseTab = () => {
         const response = await k8sApi.listDocuments();
         setDocuments(response.documents);
       } catch (err) {
-        console.error('Failed to load documents:', err);
         setError(
           err instanceof Error ? err.message : 'Failed to load documents',
         );
@@ -248,7 +262,6 @@ export const KnowledgeBaseTab = () => {
       const response = await k8sApi.listDocuments();
       setDocuments(response.documents);
     } catch (err) {
-      console.error('Failed to refresh documents:', err);
       setError(
         err instanceof Error ? err.message : 'Failed to refresh documents',
       );
@@ -533,10 +546,10 @@ export const KnowledgeBaseTab = () => {
                 />
               </Box>
             ),
-            'Vector Store':
-              `${vectorStore.id.charAt(0).toUpperCase() + vectorStore.id.slice(1)} / ${vectorStore.indexName}`,
-            'Embedding Model':
-              `${vectorStore.embeddingModel} (${vectorStore.embeddingDimensions} dimensions)`,
+            'Vector Store': `${
+              vectorStore.id.charAt(0).toUpperCase() + vectorStore.id.slice(1)
+            } / ${vectorStore.indexName}`,
+            'Embedding Model': `${vectorStore.embeddingModel} (${vectorStore.embeddingDimensions} dimensions)`,
             'Total Documents': totalDocuments,
           }}
         />
@@ -559,230 +572,232 @@ export const KnowledgeBaseTab = () => {
             </Box>
           }
         >
-      {documents.length > 0 && (
-        <Box className={classes.documentsHeader}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Checkbox
-              checked={
-                selectedDocuments.size === documents.length &&
-                documents.length > 0
-              }
-              indeterminate={
-                selectedDocuments.size > 0 &&
-                selectedDocuments.size < documents.length
-              }
-              onChange={handleToggleAll}
-              color="primary"
-            />
-            <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
-              Documents ({documents.length})
-            </Typography>
-          </Box>
-        <Box className={classes.searchBox}>
-          <Select
-            value={sortBy}
-            onChange={e => {
-              const newSortBy = e.target.value as
-                | 'name'
-                | 'date'
-                | 'size'
-                | 'kind';
-              if (newSortBy === sortBy) {
-                setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-              } else {
-                setSortBy(newSortBy);
-                setSortOrder('desc');
-              }
-            }}
-            variant="outlined"
-            style={{ minWidth: '150px', marginRight: 8, height: '40px' }}
-          >
-            <MenuItem value="date">
-              Sort by Date{' '}
-              {sortBy === 'date' && (sortOrder === 'desc' ? '↓' : '↑')}
-            </MenuItem>
-            <MenuItem value="name">
-              Sort by Name{' '}
-              {sortBy === 'name' && (sortOrder === 'desc' ? '↓' : '↑')}
-            </MenuItem>
-            <MenuItem value="size">
-              Sort by Size{' '}
-              {sortBy === 'size' && (sortOrder === 'desc' ? '↓' : '↑')}
-            </MenuItem>
-            <MenuItem value="kind">
-              Sort by Kind{' '}
-              {sortBy === 'kind' && (sortOrder === 'desc' ? '↓' : '↑')}
-            </MenuItem>
-          </Select>
-          <TextField
-            placeholder="Search..."
-            size="small"
-            variant="outlined"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-            style={{ width: '250px' }}
-          />
-          <Tooltip title="Refresh documents">
-            <IconButton
-              size="small"
-              onClick={handleRefresh}
-              disabled={documentsLoading}
-            >
-              <RefreshIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-          </Box>
-        )}
-
-        {/* Bulk Action Bar */}
-        {selectedDocuments.size > 0 && (
-        <Box className={classes.bulkActionBar}>
-          <Typography variant="body2" style={{ fontWeight: 600 }}>
-            {selectedDocuments.size} document{selectedDocuments.size > 1 ? 's' : ''}{' '}
-            selected
-          </Typography>
-          <Box display="flex" gap={1}>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => setSelectedDocuments(new Set())}
-            >
-              Clear Selection
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              color="secondary"
-              startIcon={<DeleteIcon />}
-              onClick={handleBulkDeleteClick}
-            >
-              Delete Selected
-            </Button>
-          </Box>
-        </Box>
-        )}
-
-        {documentsLoading ? (
-        <Box textAlign="center" padding={4}>
-          <Progress />
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            style={{ marginTop: 16 }}
-          >
-            Loading documents...
-          </Typography>
-        </Box>
-        ) : documents.length === 0 ? (
-        <Box className={classes.emptyState}>
-          <DescriptionIcon style={{ fontSize: 64, color: '#ccc' }} />
-          <Typography variant="h6" gutterBottom style={{ marginTop: 16 }}>
-            No Documents Uploaded Yet
-          </Typography>
-          <Typography
-            variant="body2"
-            color="textSecondary"
-            paragraph
-            style={{ maxWidth: 500, margin: '0 auto 16px' }}
-          >
-            Upload Kubernetes YAML files, PDFs, or text documents to build your
-            knowledge base. These will be used to assist with YAML generation
-            and provide context for your custom resources.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<CloudUploadIcon />}
-            onClick={() => setUploadDialogOpen(true)}
-          >
-            Upload Your First Document
-          </Button>
-        </Box>
-        ) : (
-          <Box>
-          {sortDocuments(
-            documents.filter(doc => {
-              if (!searchQuery) return true;
-              const query = searchQuery.toLowerCase();
-              return (
-                doc.fileName.toLowerCase().includes(query) ||
-                doc.format.toLowerCase().includes(query) ||
-                doc.kind?.toLowerCase().includes(query) ||
-                doc.apiVersion?.toLowerCase().includes(query) ||
-                doc.namespace?.toLowerCase().includes(query)
-              );
-            }),
-          ).map((doc: DocumentInfo) => (
-            <Box key={doc.fileName} className={classes.documentItem}>
-              <Box className={classes.documentInfo}>
+          {documents.length > 0 && (
+            <Box className={classes.documentsHeader}>
+              <Box display="flex" alignItems="center" style={{ gap: 8 }}>
                 <Checkbox
-                  checked={selectedDocuments.has(doc.fileName)}
-                  onChange={() => handleToggleDocument(doc.fileName)}
+                  checked={
+                    selectedDocuments.size === documents.length &&
+                    documents.length > 0
+                  }
+                  indeterminate={
+                    selectedDocuments.size > 0 &&
+                    selectedDocuments.size < documents.length
+                  }
+                  onChange={handleToggleAll}
                   color="primary"
                 />
-                <DescriptionIcon color="action" />
-                <Box style={{ flex: 1 }}>
-                  <Typography variant="body2" style={{ fontWeight: 500 }}>
-                    {doc.fileName}
-                  </Typography>
-                  <Box
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      flexWrap: 'wrap',
-                      marginTop: 4,
-                    }}
-                  >
-                    {/* Format Badge - Always shown */}
-                    <Chip
-                      label={getFormatLabel(doc.format)}
-                      size="small"
-                      color={getFormatBadgeColor(doc.format)}
-                      style={{ height: 20, fontSize: '0.7rem' }}
-                    />
-
-                    {/* Rest of metadata */}
-                    <Typography variant="caption" color="textSecondary">
-                      {doc.chunkCount} chunk
-                      {doc.chunkCount !== 1 ? 's' : ''} •{' '}
-                      {formatFileSize(doc.totalSize)} •{' '}
-                      {formatRelativeTime(doc.uploadedAt)}
-                      {/* PDF-specific */}
-                      {doc.pageCount && ` • ${doc.pageCount} pages`}
-                      {/* Text-specific */}
-                      {doc.lineCount && ` • ${doc.lineCount} lines`}
-                      {/* YAML-specific (only in metadata tooltip) */}
-                      {doc.kind && doc.apiVersion && (
-                        <Tooltip title={`${doc.kind} (${doc.apiVersion})`}>
-                          <span> • K8s Resource</span>
-                        </Tooltip>
-                      )}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Tooltip title="Delete document">
+                <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
+                  Documents ({documents.length})
+                </Typography>
+              </Box>
+              <Box className={classes.searchBox}>
+                <Select
+                  value={sortBy}
+                  onChange={e => {
+                    const newSortBy = e.target.value as
+                      | 'name'
+                      | 'date'
+                      | 'size'
+                      | 'kind';
+                    if (newSortBy === sortBy) {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy(newSortBy);
+                      setSortOrder('desc');
+                    }
+                  }}
+                  variant="outlined"
+                  style={{ minWidth: '150px', marginRight: 8, height: '40px' }}
+                >
+                  <MenuItem value="date">
+                    Sort by Date{' '}
+                    {sortBy === 'date' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  </MenuItem>
+                  <MenuItem value="name">
+                    Sort by Name{' '}
+                    {sortBy === 'name' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  </MenuItem>
+                  <MenuItem value="size">
+                    Sort by Size{' '}
+                    {sortBy === 'size' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  </MenuItem>
+                  <MenuItem value="kind">
+                    Sort by Kind{' '}
+                    {sortBy === 'kind' && (sortOrder === 'desc' ? '↓' : '↑')}
+                  </MenuItem>
+                </Select>
+                <TextField
+                  placeholder="Search..."
+                  size="small"
+                  variant="outlined"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  style={{ width: '250px' }}
+                />
+                <Tooltip title="Refresh documents">
                   <IconButton
                     size="small"
-                    onClick={() => handleDeleteClick(doc.fileName)}
-                    color="secondary"
+                    onClick={handleRefresh}
+                    disabled={documentsLoading}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <RefreshIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               </Box>
             </Box>
-          ))}
-        </Box>
-        )}
+          )}
+
+          {/* Bulk Action Bar */}
+          {selectedDocuments.size > 0 && (
+            <Box className={classes.bulkActionBar}>
+              <Typography variant="body2" style={{ fontWeight: 600 }}>
+                {selectedDocuments.size} document
+                {selectedDocuments.size > 1 ? 's' : ''} selected
+              </Typography>
+              <Box display="flex" style={{ gap: 8 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => setSelectedDocuments(new Set())}
+                >
+                  Clear Selection
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleBulkDeleteClick}
+                >
+                  Delete Selected
+                </Button>
+              </Box>
+            </Box>
+          )}
+
+          {documentsLoading && (
+            <Box textAlign="center" padding={4}>
+              <Progress />
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                style={{ marginTop: 16 }}
+              >
+                Loading documents...
+              </Typography>
+            </Box>
+          )}
+          {!documentsLoading && documents.length === 0 && (
+            <Box className={classes.emptyState}>
+              <DescriptionIcon style={{ fontSize: 64, color: '#ccc' }} />
+              <Typography variant="h6" gutterBottom style={{ marginTop: 16 }}>
+                No Documents Uploaded Yet
+              </Typography>
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                paragraph
+                style={{ maxWidth: 500, margin: '0 auto 16px' }}
+              >
+                Upload Kubernetes YAML files, PDFs, or text documents to build
+                your knowledge base. These will be used to assist with YAML
+                generation and provide context for your custom resources.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<CloudUploadIcon />}
+                onClick={() => setUploadDialogOpen(true)}
+              >
+                Upload Your First Document
+              </Button>
+            </Box>
+          )}
+          {!documentsLoading && documents.length > 0 && (
+            <Box>
+              {sortDocuments(
+                documents.filter(doc => {
+                  if (!searchQuery) return true;
+                  const query = searchQuery.toLowerCase();
+                  return (
+                    doc.fileName.toLowerCase().includes(query) ||
+                    doc.format.toLowerCase().includes(query) ||
+                    doc.kind?.toLowerCase().includes(query) ||
+                    doc.apiVersion?.toLowerCase().includes(query) ||
+                    doc.namespace?.toLowerCase().includes(query)
+                  );
+                }),
+              ).map((doc: DocumentInfo) => (
+                <Box key={doc.fileName} className={classes.documentItem}>
+                  <Box className={classes.documentInfo}>
+                    <Checkbox
+                      checked={selectedDocuments.has(doc.fileName)}
+                      onChange={() => handleToggleDocument(doc.fileName)}
+                      color="primary"
+                    />
+                    <DescriptionIcon color="action" />
+                    <Box style={{ flex: 1 }}>
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        {doc.fileName}
+                      </Typography>
+                      <Box
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          flexWrap: 'wrap',
+                          marginTop: 4,
+                        }}
+                      >
+                        {/* Format Badge - Always shown */}
+                        <Chip
+                          label={getFormatLabel(doc.format)}
+                          size="small"
+                          color={getFormatBadgeColor(doc.format)}
+                          style={{ height: 20, fontSize: '0.7rem' }}
+                        />
+
+                        {/* Rest of metadata */}
+                        <Typography variant="caption" color="textSecondary">
+                          {doc.chunkCount} chunk
+                          {doc.chunkCount !== 1 ? 's' : ''} •{' '}
+                          {formatFileSize(doc.totalSize)} •{' '}
+                          {formatRelativeTime(doc.uploadedAt)}
+                          {/* PDF-specific */}
+                          {doc.pageCount && ` • ${doc.pageCount} pages`}
+                          {/* Text-specific */}
+                          {doc.lineCount && ` • ${doc.lineCount} lines`}
+                          {/* YAML-specific (only in metadata tooltip) */}
+                          {doc.kind && doc.apiVersion && (
+                            <Tooltip title={`${doc.kind} (${doc.apiVersion})`}>
+                              <span> • K8s Resource</span>
+                            </Tooltip>
+                          )}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Tooltip title="Delete document">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDeleteClick(doc.fileName)}
+                        color="secondary"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          )}
         </InfoCard>
       </Box>
 
@@ -1049,7 +1064,10 @@ export const KnowledgeBaseTab = () => {
             Are you sure you want to delete <strong>{documentToDelete}</strong>?
           </Typography>
           <Typography variant="body2" color="textSecondary" paragraph>
-            This will remove all {documents.find(d => d.fileName === documentToDelete)?.chunkCount || 0} chunks from the vector store. This action cannot be undone.
+            This will remove all{' '}
+            {documents.find(d => d.fileName === documentToDelete)?.chunkCount ||
+              0}{' '}
+            chunks from the vector store. This action cannot be undone.
           </Typography>
 
           {/* Error Message */}
@@ -1091,10 +1109,13 @@ export const KnowledgeBaseTab = () => {
         <DialogTitle>Delete Multiple Documents</DialogTitle>
         <DialogContent>
           <Typography variant="body1" paragraph>
-            Are you sure you want to delete <strong>{selectedDocuments.size}</strong> document{selectedDocuments.size > 1 ? 's' : ''}?
+            Are you sure you want to delete{' '}
+            <strong>{selectedDocuments.size}</strong> document
+            {selectedDocuments.size > 1 ? 's' : ''}?
           </Typography>
           <Typography variant="body2" color="textSecondary" paragraph>
-            This will remove all chunks from the vector store for these documents:
+            This will remove all chunks from the vector store for these
+            documents:
           </Typography>
           <Box
             maxHeight="200px"
@@ -1107,7 +1128,11 @@ export const KnowledgeBaseTab = () => {
             }}
           >
             {Array.from(selectedDocuments).map(fileName => (
-              <Typography key={fileName} variant="body2" style={{ marginBottom: 4 }}>
+              <Typography
+                key={fileName}
+                variant="body2"
+                style={{ marginBottom: 4 }}
+              >
                 • {fileName}
               </Typography>
             ))}
@@ -1140,7 +1165,11 @@ export const KnowledgeBaseTab = () => {
             disabled={bulkDeleting}
             startIcon={!bulkDeleting && <DeleteIcon />}
           >
-            {bulkDeleting ? 'Deleting...' : `Delete ${selectedDocuments.size} Document${selectedDocuments.size > 1 ? 's' : ''}`}
+            {bulkDeleting
+              ? 'Deleting...'
+              : `Delete ${selectedDocuments.size} Document${
+                  selectedDocuments.size > 1 ? 's' : ''
+                }`}
           </Button>
         </DialogActions>
       </Dialog>
