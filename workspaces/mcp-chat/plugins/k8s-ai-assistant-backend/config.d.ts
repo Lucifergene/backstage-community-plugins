@@ -21,7 +21,7 @@ export interface Config {
      * NOTE: RAG configuration (embedding providers and vector stores) has been moved
      * to the knowledge-base-backend plugin. Configure them under the 'knowledgeBase'
      * namespace in app-config.yaml instead.
-     * @see @internal/backstage-plugin-knowledge-base-backend for RAG configuration
+     * @see @lucifergene/plugin-knowledge-base-backend for RAG configuration
      */
 
     /**

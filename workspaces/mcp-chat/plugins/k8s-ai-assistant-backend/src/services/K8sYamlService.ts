@@ -25,7 +25,7 @@ import {
   ChatMessage,
   FileFormat,
 } from '../types';
-import { KnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
+import { KnowledgeBaseService } from '@lucifergene/plugin-knowledge-base-backend';
 import { SYSTEM_PROMPTS } from '../constants/systemPrompts';
 
 export class K8sYamlService {

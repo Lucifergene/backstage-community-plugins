@@ -20,7 +20,7 @@ import Router from 'express-promise-router';
 import { K8sLogService } from './services/K8sLogService';
 import { K8sYamlService } from './services/K8sYamlService';
 import { K8sAiAssistantService } from './services/K8sAiAssistantService';
-import { KnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
+import { KnowledgeBaseService } from '@lucifergene/plugin-knowledge-base-backend';
 import { K8sGeneralChatService } from './services/K8sGeneralChatService';
 import {
   LogExplainRequest,
@@ -199,8 +199,8 @@ export async function createRouter({
   router.get('/mcp/tools', async (_req, res) => {
     logger.info('GET /mcp/tools');
     const tools = k8sAiAssistantService.getAvailableTools();
-    logger.info(`Available MCP tools: ${tools.length} tools`, { 
-      tools: tools.map((t: any) => t.function?.name || 'unknown') 
+    logger.info(`Available MCP tools: ${tools.length} tools`, {
+      tools: tools.map((t: any) => t.function?.name || 'unknown'),
     });
     res.json({
       availableTools: tools,
@@ -262,11 +262,9 @@ export async function createRouter({
     try {
       const namespace = req.query.namespace as string | undefined;
       const allDocuments = await knowledgeBaseService.listDocuments(namespace);
-      
+
       // Filter to only YAML documents
-      const yamlDocuments = allDocuments.filter(
-        doc => doc.format === 'yaml',
-      );
+      const yamlDocuments = allDocuments.filter(doc => doc.format === 'yaml');
 
       res.json({
         success: true,
