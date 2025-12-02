@@ -22,9 +22,11 @@ import { K8sLogService } from './services/K8sLogService';
 import { K8sYamlService } from './services/K8sYamlService';
 import { K8sGeneralChatService } from './services/K8sGeneralChatService';
 import { K8sAiAssistantServiceImpl } from './services/K8sAiAssistantServiceImpl';
+// eslint-disable-next-line @backstage/no-mixed-plugin-imports
 import { getKnowledgeBaseService } from '@internal/backstage-plugin-knowledge-base-backend';
 
 // Import from mcp-chat-backend library
+// eslint-disable-next-line @backstage/no-mixed-plugin-imports
 import {
   MCPClientServiceImpl,
   ProviderFactory,

@@ -13,4 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { k8SAiAssistantPlugin as default } from './plugin';
+
+import type {
+  LoggerService,
+  RootConfigService,
+} from '@backstage/backend-plugin-api';
+
+/**
+ * Options for creating a KnowledgeBaseService
+ * @public
+ */
+export interface CreateKnowledgeBaseServiceOptions {
+  logger: LoggerService;
+  config: RootConfigService;
+}
