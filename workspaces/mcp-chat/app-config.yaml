@@ -27,43 +27,39 @@ integrations:
 # --------- MCP Chat Configuration ---------
 mcpChat:
   providers:
-    - id: openai
-      baseUrl: 'https://any-openai-compatible-url/v1'
-      token: ${OPENAI_API_KEY}
-      model: gpt-4o-mini
-    - id: openai-responses # OpenAI Responses API
-      baseUrl: 'http://your-responses-api-endpoint.com/v1/openai/v1'
-      model: 'gemini/models/gemini-2.5-flash'
-      token: ${API_TOKEN} # Optional
-    - id: gemini
-      token: ${GEMINI_API_KEY}
-      model: gemini-2.5-flash
-    - id: claude
-      token: ${CLAUDE_API_KEY}
-      model: claude-sonnet-4-20250514
-    - id: ollama
-      baseUrl: 'http://localhost:11434'
-      model: llama3.1:8b
-    - id: litellm
-      baseUrl: 'http://localhost:4000'
-      token: ${LITELLM_API_KEY}
-      model: gpt-4o-mini
+    # Option 1: Llama Stack / OpenAI-compatible Responses API
+    - id: openai-responses
+      baseUrl: ${LLAMASTACK_BASE_URL}  # e.g., 'https://your-llamastack-server.com/v1/openai/v1'
+      model: ${LLAMASTACK_MODEL}        # e.g., 'gemini/gemini-2.5-flash'
+      # token: ${LLAMASTACK_API_KEY}    # Optional: uncomment if authentication required
+    # Option 2: Native providers (uncomment one)
+    # - id: gemini
+    #   token: ${GEMINI_API_KEY}
+    #   model: gemini-2.5-flash
+    # - id: openai
+    #   token: ${OPENAI_API_KEY}
+    #   model: gpt-4o-mini
+    # - id: ollama
+    #   baseUrl: 'http://localhost:11434'
+    #   model: llama3.1:8b
   mcpServers:
-    - id: brave-search-server
-      name: Brave Search Server
-      npxCommand: '@modelcontextprotocol/server-brave-search'
-      env:
-        BRAVE_API_KEY: ${BRAVE_API_KEY}
-    - id: kubernetes-server
-      name: Kubernetes Server
-      npxCommand: 'kubernetes-mcp-server@latest'
-      env:
-        KUBECONFIG: ${KUBECONFIG}
-    - id: backstage-server
-      name: Backstage Server
-      url: 'http://localhost:7007/api/mcp-actions/v1'
-      headers:
-        Authorization: 'Bearer ${BACKSTAGE_API_TOKEN}'
+    # OpenShift/Kubernetes MCP Server (Streamable HTTP)
+    - id: kubernetes-mcp-server
+      name: Kubernetes MCP Server
+      type: streamable-http
+      url: ${MCP_SERVER_URL}  # e.g., 'https://your-mcp-server.com/mcp'
+    # Brave Search MCP Server (stdio via npx)
+    # - id: brave-search-server
+    #   name: Brave Search Server
+    #   npxCommand: '@modelcontextprotocol/server-brave-search'
+    #   env:
+    #     BRAVE_API_KEY: ${BRAVE_API_KEY}
+    # Local Kubernetes MCP Server (stdio via npx)
+    # - id: kubernetes-server
+    #   name: Kubernetes Server
+    #   npxCommand: 'kubernetes-mcp-server@latest'
+    #   env:
+    #     KUBECONFIG: ${KUBECONFIG}
   systemPrompt: "You are a helpful assistant. When using tools, provide a clear, readable summary of the results rather than showing raw data. Focus on answering the user's question with the information gathered."
   quickPrompts:
     - title: 'Web Search & Research'
@@ -78,6 +74,47 @@ mcpChat:
       description: 'Get insights from Backstage, including catalog entities and documentation'
       prompt: 'Describe the "example-app" microservice in our Backstage catalog'
       category: Portals
+# ------------------------------------------------
+
+# --------- Knowledge Base Configuration ---------
+# Choose ONE of the following configurations:
+#
+# Option 1: Llama Stack (OpenAI-compatible RAG with built-in vector store)
+# Llama Stack handles embeddings and vector storage automatically.
+# When configured, takes precedence over traditional providers.
+#
+knowledgeBase:
+  llamastack:
+    baseUrl: ${LLAMASTACK_BASE_URL}           # e.g., 'https://your-llamastack-server.com'
+    vectorStoreId: ${LLAMASTACK_VECTOR_STORE} # e.g., 'vs_xxxxx'
+    model: ${LLAMASTACK_MODEL}                # e.g., 'gemini/gemini-2.5-flash'
+    # token: ${LLAMASTACK_API_KEY}            # Optional: uncomment if auth required
+    chunkingStrategy: 'static'                # 'auto' or 'static'
+    maxChunkSizeTokens: 200
+    chunkOverlapTokens: 50
+#
+# Option 2: Traditional embedding provider + vector store (Pinecone/ChromaDB)
+# Comment out llamastack above and uncomment below to use:
+#
+# knowledgeBase:
+#   embeddingProviders:
+#     - id: gemini
+#       token: ${GEMINI_API_KEY}
+#       model: gemini-embedding-001
+#       dimensions: 3072
+#     # Or use OpenAI:
+#     # - id: openai
+#     #   token: ${OPENAI_API_KEY}
+#     #   model: text-embedding-3-small
+#     #   dimensions: 1536
+#   vectorStores:
+#     - id: pinecone
+#       apiKey: ${PINECONE_API_KEY}
+#       indexName: k8s-knowledge-base
+#     # Or use ChromaDB:
+#     # - id: chromadb
+#     #   baseUrl: 'http://localhost:8000'
+#     #   indexName: k8s-knowledge-base
 # ------------------------------------------------
 
 proxy:

@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 import { useState, useEffect } from 'react';
-import { Grid, Button, Typography, Box, IconButton } from '@material-ui/core';
+import {
+  Grid,
+  Button,
+  Typography,
+  Box,
+  IconButton,
+  useTheme,
+} from '@material-ui/core';
 import StorageIcon from '@material-ui/icons/Storage';
 import SettingsIcon from '@material-ui/icons/Settings';
 import CloseIcon from '@material-ui/icons/Close';
@@ -39,6 +46,7 @@ interface LandingPageProps {
 
 export const LandingPage = ({ k8sResources }: LandingPageProps) => {
   const k8sApi = useApi(k8sAiAssistantApiRef);
+  const theme = useTheme();
 
   // State for provider status
   const [providerData, setProviderData] = useState<ProviderStatusData | null>(
@@ -192,21 +200,17 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
           <Grid item xs={12}>
             <Box
               style={{
-                backgroundColor: '#fff',
-                padding: '16px 24px',
+                backgroundColor: 'transparent',
+                padding: '12px 20px',
                 borderRadius: 4,
-                border: '1px solid #e0e0e0',
+                border: `1px solid ${theme.palette.divider}`,
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center',
               }}
             >
-              <Typography variant="h5" style={{ fontWeight: 'bold' }}>
-                Kubernetes Knowledge Base
-              </Typography>
               <Button
-                variant="contained"
-                color="primary"
+                variant="outlined"
                 startIcon={<SettingsIcon />}
                 onClick={() => setIsDrawerOpen(true)}
                 disabled={!vectorStoreData?.configured}
@@ -220,7 +224,7 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
 
       {/* Unified AI Chat Interface */}
       <Grid item xs={12}>
-        <Box>
+        <Box style={{ marginTop: isChatFullscreen ? 0 : -8 }}>
           <UnifiedChatLayout
             k8sResources={k8sResources}
             onFullscreenChange={setIsChatFullscreen}
@@ -238,9 +242,9 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
             bottom: 0,
             width: '65%',
             maxWidth: 900,
-            backgroundColor: '#f5f5f5',
-            boxShadow: '-4px 0 12px rgba(0,0,0,0.2)',
-            zIndex: 1300,
+            backgroundColor: theme.palette.background.default,
+            boxShadow: theme.shadows[16],
+            zIndex: theme.zIndex.drawer,
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
@@ -251,29 +255,24 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
             style={{
               position: 'sticky',
               top: 0,
-              backgroundColor: '#fff',
-              borderBottom: '2px solid #e0e0e0',
+              backgroundColor: theme.palette.background.paper,
+              borderBottom: `1px solid ${theme.palette.divider}`,
               padding: '20px 32px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               zIndex: 1,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
             }}
           >
             <Box display="flex" alignItems="center" style={{ gap: 16 }}>
-              <StorageIcon style={{ fontSize: 28, color: '#1976d2' }} />
+              <StorageIcon
+                style={{ fontSize: 28, color: theme.palette.primary.main }}
+              />
               <Typography variant="h4" style={{ fontWeight: 600 }}>
                 Knowledge Base
               </Typography>
             </Box>
-            <IconButton
-              onClick={() => setIsDrawerOpen(false)}
-              size="small"
-              style={{
-                backgroundColor: '#f5f5f5',
-              }}
-            >
+            <IconButton onClick={() => setIsDrawerOpen(false)} size="small">
               <CloseIcon />
             </IconButton>
           </Box>

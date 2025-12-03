@@ -20,16 +20,27 @@ import {
 } from '@backstage/backend-plugin-api';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
 import { KnowledgeBaseServiceImpl } from './KnowledgeBaseServiceImpl';
+import { LlamaStackKnowledgeBaseService } from './LlamaStackKnowledgeBaseService';
 import { DocumentService } from './DocumentService';
 import { EmbeddingProviderFactory } from '../providers/embedding-provider-factory';
 import {
   VectorStoreFactory,
   getVectorStoreConfig,
 } from '../vectorstores/vectorstore-factory';
-import { getEmbeddingProviderConfig } from '../utils/config-helper';
+import {
+  getEmbeddingProviderConfig,
+  getLlamaStackConfig,
+} from '../utils/config-helper';
 
 /**
- * Factory function to create a KnowledgeBaseService instance
+ * Factory function to create a KnowledgeBaseService instance.
+ *
+ * Priority order:
+ * 1. If knowledgeBase.llamastack is configured, use LlamaStackKnowledgeBaseService
+ * 2. Otherwise, use standard KnowledgeBaseServiceImpl with embedding provider + vector store
+ *
+ * This allows Llama Stack to coexist with Pinecone/ChromaDB configurations.
+ *
  * @public
  */
 export async function getKnowledgeBaseService(deps: {
@@ -38,13 +49,27 @@ export async function getKnowledgeBaseService(deps: {
 }): Promise<KnowledgeBaseService> {
   const { logger, config } = deps;
 
+  // Check for Llama Stack configuration first
+  const llamaStackConfig = getLlamaStackConfig(config);
+  if (llamaStackConfig) {
+    logger.info(
+      `Using Llama Stack knowledge base with vector store: ${llamaStackConfig.vectorStoreId}`,
+    );
+    return new LlamaStackKnowledgeBaseService(llamaStackConfig, logger);
+  }
+
+  // Fall back to standard embedding provider + vector store configuration
+  logger.info(
+    'Llama Stack not configured, using standard embedding provider + vector store',
+  );
+
   const embeddingConfig = getEmbeddingProviderConfig(config);
   const vectorStoreConfig = getVectorStoreConfig(config);
 
   if (!vectorStoreConfig) {
     throw new Error(
       'Knowledge Base vector store is not configured. ' +
-        'Please configure knowledgeBase.vectorStores in app-config.yaml',
+        'Please configure knowledgeBase.vectorStores or knowledgeBase.llamastack in app-config.yaml',
     );
   }
 
