@@ -17,51 +17,9 @@ export interface Config {
   /** Configuration for the Knowledge Base backend plugin */
   knowledgeBase?: {
     /**
-     * Llama Stack configuration (optional - if configured, takes precedence)
-     * Uses Llama Stack's OpenAI-compatible APIs for RAG with Responses API.
-     * When configured, embeddingProviders and vectorStores are not required.
-     * @visibility backend
-     */
-    llamastack?: {
-      /**
-       * Base URL for the Llama Stack server
-       * @visibility backend
-       */
-      baseUrl: string;
-      /**
-       * ID of an existing vector store on the Llama Stack server
-       * @visibility backend
-       */
-      vectorStoreId: string;
-      /**
-       * LLM model to use for Responses API (e.g., 'gemini/gemini-2.5-flash')
-       * @visibility backend
-       */
-      model: string;
-      /**
-       * Optional API token for authentication
-       * @visibility secret
-       */
-      token?: string;
-      /**
-       * Chunking strategy for file uploads: 'auto' or 'static'
-       * @visibility backend
-       */
-      chunkingStrategy?: 'auto' | 'static';
-      /**
-       * Max chunk size in tokens (for static chunking)
-       * @visibility backend
-       */
-      maxChunkSizeTokens?: number;
-      /**
-       * Chunk overlap in tokens (for static chunking)
-       * @visibility backend
-       */
-      chunkOverlapTokens?: number;
-    };
-    /**
      * Embedding providers configuration (array format - first is active)
-     * Not required if llamastack is configured.
+     * Required for pinecone/chromadb vector stores.
+     * NOT required if using llamastack (which handles embeddings internally).
      * @visibility backend
      */
     embeddingProviders?: Array<{
@@ -93,30 +51,30 @@ export interface Config {
     }>;
     /**
      * Vector stores configuration (array format - first is active)
-     * Not required if llamastack is configured.
+     * Supported providers: pinecone, chromadb, llamastack
      * @visibility backend
      */
     vectorStores?: Array<{
       /**
-       * Vector store ID: pinecone, chromadb
+       * Vector store ID: pinecone, chromadb, llamastack
        * @visibility backend
        */
       id: string;
       /**
-       * API key for the vector store service
+       * API key for the vector store service (for Pinecone)
        * @visibility secret
        */
       apiKey?: string;
       /**
-       * Base URL (for self-hosted vector stores like ChromaDB)
+       * Base URL (for ChromaDB or LlamaStack)
        * @visibility backend
        */
       baseUrl?: string;
       /**
-       * Index name (for Pinecone) or collection name (for others) - REQUIRED
+       * Index/collection name (required for pinecone/chromadb, not for llamastack)
        * @visibility backend
        */
-      indexName: string;
+      indexName?: string;
       /**
        * Environment (for Pinecone)
        * @visibility backend
@@ -127,6 +85,32 @@ export interface Config {
        * @visibility backend
        */
       config?: { [key: string]: string };
+      // LlamaStack-specific fields
+      /**
+       * ID of an existing vector store on the Llama Stack server (llamastack only)
+       * @visibility backend
+       */
+      vectorStoreId?: string;
+      /**
+       * API token for LlamaStack authentication (llamastack only)
+       * @visibility secret
+       */
+      token?: string;
+      /**
+       * Chunking strategy: 'auto' or 'static' (llamastack only)
+       * @visibility backend
+       */
+      chunkingStrategy?: 'auto' | 'static';
+      /**
+       * Max chunk size in tokens for static chunking (llamastack only)
+       * @visibility backend
+       */
+      maxChunkSizeTokens?: number;
+      /**
+       * Chunk overlap in tokens for static chunking (llamastack only)
+       * @visibility backend
+       */
+      chunkOverlapTokens?: number;
     }>;
   };
 }

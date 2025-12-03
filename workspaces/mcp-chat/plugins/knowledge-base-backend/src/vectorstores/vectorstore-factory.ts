@@ -19,8 +19,8 @@ import { PineconeVectorStore } from './pinecone-vectorstore';
 import { ChromaDBVectorStore } from './chromadb-vectorstore';
 
 /**
- * Get vector store configuration from Backstage config
- * Reads from knowledgeBase.vectorStores array (first entry is active)
+ * Get vector store configuration from knowledgeBase.vectorStores array.
+ * First entry is the active provider. Supported: pinecone, chromadb, llamastack
  */
 export function getVectorStoreConfig(
   config: RootConfigService,
@@ -29,29 +29,61 @@ export function getVectorStoreConfig(
     'knowledgeBase.vectorStores',
   );
 
-  // If no vector stores configured, return null
   if (!vectorStores || vectorStores.length === 0) {
     return null;
   }
 
-  // Use the first vector store in the array as the active one
   const vectorStoreConfig = vectorStores[0];
-
   const id = vectorStoreConfig.getOptionalString('id');
+
+  if (!id) {
+    throw new Error(
+      'Vector store configuration is incomplete. Required field: id',
+    );
+  }
+
+  const baseUrl = vectorStoreConfig.getOptionalString('baseUrl');
+  const apiKey = vectorStoreConfig.getOptionalString('apiKey');
+  const environment = vectorStoreConfig.getOptionalString('environment');
+
+  // LlamaStack configuration
+  if (id.toLowerCase() === 'llamastack') {
+    const vectorStoreId = vectorStoreConfig.getOptionalString('vectorStoreId');
+    const token = vectorStoreConfig.getOptionalString('token');
+    const chunkingStrategy = vectorStoreConfig.getOptionalString(
+      'chunkingStrategy',
+    ) as 'auto' | 'static' | undefined;
+    const maxChunkSizeTokens =
+      vectorStoreConfig.getOptionalNumber('maxChunkSizeTokens');
+    const chunkOverlapTokens =
+      vectorStoreConfig.getOptionalNumber('chunkOverlapTokens');
+
+    if (!baseUrl || !vectorStoreId) {
+      throw new Error(
+        'LlamaStack vector store configuration is incomplete. Required fields: baseUrl, vectorStoreId',
+      );
+    }
+
+    return {
+      id,
+      baseUrl,
+      vectorStoreId,
+      token,
+      chunkingStrategy: chunkingStrategy || 'static',
+      maxChunkSizeTokens: maxChunkSizeTokens || 200,
+      chunkOverlapTokens: chunkOverlapTokens || 50,
+    };
+  }
+
+  // Pinecone/ChromaDB configuration
   const indexName = vectorStoreConfig.getOptionalString('indexName');
 
-  // Validate required fields
-  if (!id || !indexName) {
+  if (!indexName) {
     throw new Error(
       'Vector store configuration is incomplete. Required fields: id, indexName',
     );
   }
 
-  const apiKey = vectorStoreConfig.getOptionalString('apiKey');
-  const baseUrl = vectorStoreConfig.getOptionalString('baseUrl');
-  const environment = vectorStoreConfig.getOptionalString('environment');
-
-  // Get additional config as a record
   const additionalConfig: Record<string, string> = {};
   const configKeys = vectorStoreConfig.getOptionalConfig('config');
   if (configKeys) {
@@ -93,15 +125,10 @@ export class VectorStoreFactory {
       case 'chroma':
         return new ChromaDBVectorStore(config);
 
-      // Add more providers here as needed:
-      // case 'qdrant':
-      //   return new QdrantVectorStore(config);
-      // case 'weaviate':
-      //   return new WeaviateVectorStore(config);
-
+      // llamastack is handled in service/index.ts via LlamaStackKnowledgeBaseService
       default:
         throw new Error(
-          `Unsupported vector store provider: ${config.id}. Supported providers: pinecone, chromadb`,
+          `Unsupported vector store provider: ${config.id}. Supported providers: pinecone, chromadb, llamastack`,
         );
     }
   }
@@ -121,4 +148,3 @@ export class VectorStoreFactory {
     return VectorStoreFactory.createProvider(vectorStoreConfig);
   }
 }
-

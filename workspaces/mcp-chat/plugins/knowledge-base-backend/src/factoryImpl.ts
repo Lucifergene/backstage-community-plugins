@@ -27,10 +27,7 @@ import {
   VectorStoreFactory,
   getVectorStoreConfig,
 } from './vectorstores/vectorstore-factory';
-import {
-  getEmbeddingProviderConfig,
-  getLlamaStackConfig,
-} from './utils/config-helper';
+import { getEmbeddingProviderConfig } from './utils/config-helper';
 
 /**
  * Options for creating a KnowledgeBaseService
@@ -42,23 +39,8 @@ export interface CreateKnowledgeBaseServiceOptions {
 }
 
 /**
- * Factory implementation for creating KnowledgeBaseService instances.
- * Initializes embedding providers, vector stores, and document services.
- *
- * Priority order:
- * 1. If knowledgeBase.llamastack is configured, use LlamaStackKnowledgeBaseService
- * 2. Otherwise, use standard KnowledgeBaseServiceImpl with embedding provider + vector store
- *
- * This allows Llama Stack to coexist with Pinecone/ChromaDB configurations.
- *
- * @example
- * ```typescript
- * import { createKnowledgeBaseService } from '@internal/plugin-knowledge-base-backend';
- *
- * const kbService = await createKnowledgeBaseService({ logger, config });
- * const results = await kbService.search('kubernetes deployment');
- * ```
- *
+ * Factory for creating KnowledgeBaseService instances.
+ * Supports llamastack, pinecone, and chromadb vector stores.
  * @public
  */
 export async function createKnowledgeBaseService(
@@ -66,30 +48,37 @@ export async function createKnowledgeBaseService(
 ): Promise<KnowledgeBaseService> {
   const { logger, config } = options;
 
-  // Check for Llama Stack configuration first
-  const llamaStackConfig = getLlamaStackConfig(config);
-  if (llamaStackConfig) {
-    logger.info(
-      `Using Llama Stack knowledge base with vector store: ${llamaStackConfig.vectorStoreId}`,
-    );
-    return new LlamaStackKnowledgeBaseService(llamaStackConfig, logger);
-  }
-
-  // Fall back to standard embedding provider + vector store configuration
-  logger.info(
-    'Llama Stack not configured, using standard embedding provider + vector store',
-  );
-
-  const embeddingConfig = getEmbeddingProviderConfig(config);
   const vectorStoreConfig = getVectorStoreConfig(config);
 
   if (!vectorStoreConfig) {
     throw new Error(
       'Knowledge Base vector store is not configured. ' +
-        'Please configure knowledgeBase.vectorStores or knowledgeBase.llamastack in app-config.yaml',
+        'Please configure knowledgeBase.vectorStores in app-config.yaml',
     );
   }
 
+  if (vectorStoreConfig.id.toLowerCase() === 'llamastack') {
+    logger.info(
+      `Using LlamaStack knowledge base with vector store: ${vectorStoreConfig.vectorStoreId}`,
+    );
+    return new LlamaStackKnowledgeBaseService(
+      {
+        baseUrl: vectorStoreConfig.baseUrl!,
+        vectorStoreId: vectorStoreConfig.vectorStoreId!,
+        token: vectorStoreConfig.token,
+        chunkingStrategy: vectorStoreConfig.chunkingStrategy || 'static',
+        maxChunkSizeTokens: vectorStoreConfig.maxChunkSizeTokens || 200,
+        chunkOverlapTokens: vectorStoreConfig.chunkOverlapTokens || 50,
+      },
+      logger,
+    );
+  }
+
+  logger.info(
+    `Using ${vectorStoreConfig.id} vector store with embedding provider`,
+  );
+
+  const embeddingConfig = getEmbeddingProviderConfig(config);
   const embeddingProvider = EmbeddingProviderFactory.createProvider(
     embeddingConfig,
     logger,

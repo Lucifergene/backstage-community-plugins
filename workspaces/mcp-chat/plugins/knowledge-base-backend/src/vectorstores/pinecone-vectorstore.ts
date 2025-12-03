@@ -151,7 +151,7 @@ export class PineconeVectorStore extends VectorStoreProvider {
 
     return {
       totalDocuments: stats.totalRecordCount || 0,
-      indexName: this.config.indexName,
+      indexName: this.config.indexName!,
       dimensions: stats.dimension || 0,
     };
   }

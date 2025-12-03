@@ -4,8 +4,8 @@ A reusable Backstage backend plugin that provides RAG (Retrieval-Augmented Gener
 
 ## Features
 
+- **Vector Stores**: Support for Pinecone, ChromaDB, and Llama Stack
 - **Embedding Providers**: Support for OpenAI and Gemini embedding models
-- **Vector Stores**: Support for Pinecone and ChromaDB
 - **Document Management**: Upload, search, list, and delete documents
 - **Flexible Configuration**: Array-based configuration for easy provider switching
 - **Service-Based API**: Clean integration pattern for other plugins
@@ -18,7 +18,7 @@ This plugin is designed to be used as a dependency by other Backstage plugins.
 # In your plugin's package.json
 {
   "dependencies": {
-    "@lucifergene/plugin-knowledge-base-backend": "workspace:^"
+    "@backstage-community/plugin-knowledge-base-backend": "^0.1.0"
   }
 }
 ```
@@ -26,6 +26,8 @@ This plugin is designed to be used as a dependency by other Backstage plugins.
 ## Configuration
 
 Add the following to your `app-config.yaml`:
+
+### Option 1: Pure Vector Stores (Pinecone/ChromaDB)
 
 ```yaml
 knowledgeBase:
@@ -50,12 +52,28 @@ knowledgeBase:
       indexName: knowledge-base
 ```
 
+### Option 2: Llama Stack (RAG Platform)
+
+Llama Stack is a RAG platform that handles embeddings and vector storage automatically - no separate embedding provider needed.
+
+```yaml
+knowledgeBase:
+  vectorStores:
+    - id: llamastack
+      baseUrl: ${LLAMASTACK_BASE_URL}
+      vectorStoreId: ${LLAMASTACK_VECTOR_STORE}
+      # token: ${LLAMASTACK_API_KEY}  # Optional
+      chunkingStrategy: 'static' # 'auto' or 'static'
+      maxChunkSizeTokens: 200
+      chunkOverlapTokens: 50
+```
+
 ## Usage
 
 ### In Your Plugin
 
 ```typescript
-import { getKnowledgeBaseService } from '@lucifergene/plugin-knowledge-base-backend';
+import { getKnowledgeBaseService } from '@backstage-community/plugin-knowledge-base-backend';
 
 export const yourPlugin = createBackendPlugin({
   pluginId: 'your-plugin',
@@ -106,19 +124,22 @@ export const yourPlugin = createBackendPlugin({
 
 ## Supported Providers
 
+### Vector Stores
+
+| Provider        | Type              | Notes                                            |
+| --------------- | ----------------- | ------------------------------------------------ |
+| **Pinecone**    | Pure Vector Store | Requires API key, index, and embedding provider  |
+| **ChromaDB**    | Pure Vector Store | Requires running instance and embedding provider |
+| **Llama Stack** | RAG Platform      | Handles embeddings internally                    |
+
 ### Embedding Providers
+
+> **Note**: Required for Pinecone/ChromaDB. Not required when using Llama Stack.
 
 | Provider   | Models                                                                       | Dimensions |
 | ---------- | ---------------------------------------------------------------------------- | ---------- |
 | **Gemini** | `gemini-embedding-001`, `text-embedding-004`                                 | 768-3072   |
 | **OpenAI** | `text-embedding-3-small`, `text-embedding-3-large`, `text-embedding-ada-002` | 1536-3072  |
-
-### Vector Stores
-
-| Provider     | Type        | Notes                               |
-| ------------ | ----------- | ----------------------------------- |
-| **Pinecone** | Managed     | Requires API key and index creation |
-| **ChromaDB** | Self-hosted | Requires running ChromaDB instance  |
 
 ## API Reference
 
@@ -143,7 +164,7 @@ If you're migrating from the old embedded RAG implementation:
 ```json
 {
   "dependencies": {
-    "@lucifergene/plugin-knowledge-base-backend": "workspace:^"
+    "@backstage-community/plugin-knowledge-base-backend": "^0.1.0"
   }
 }
 ```
@@ -161,7 +182,7 @@ import { EmbeddingProvider } from '../providers/base-embedding-provider';
 import {
   KnowledgeBaseService,
   getKnowledgeBaseService,
-} from '@lucifergene/plugin-knowledge-base-backend';
+} from '@backstage-community/plugin-knowledge-base-backend';
 ```
 
 4. Update service initialization:

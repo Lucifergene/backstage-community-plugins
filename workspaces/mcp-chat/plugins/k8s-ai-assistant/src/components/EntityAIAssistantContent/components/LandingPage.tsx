@@ -200,17 +200,26 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
           <Grid item xs={12}>
             <Box
               style={{
-                backgroundColor: 'transparent',
+                backgroundColor: theme.palette.background.paper,
                 padding: '12px 20px',
                 borderRadius: 4,
                 border: `1px solid ${theme.palette.divider}`,
                 display: 'flex',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
+              <Box display="flex" alignItems="center" style={{ gap: 12 }}>
+                <StorageIcon
+                  style={{ fontSize: 24, color: theme.palette.primary.main }}
+                />
+                <Typography variant="subtitle1" style={{ fontWeight: 600 }}>
+                  Kubernetes Knowledge Base
+                </Typography>
+              </Box>
               <Button
-                variant="outlined"
+                variant="contained"
+                color="primary"
                 startIcon={<SettingsIcon />}
                 onClick={() => setIsDrawerOpen(true)}
                 disabled={!vectorStoreData?.configured}
@@ -244,7 +253,7 @@ export const LandingPage = ({ k8sResources }: LandingPageProps) => {
             maxWidth: 900,
             backgroundColor: theme.palette.background.default,
             boxShadow: theme.shadows[16],
-            zIndex: theme.zIndex.drawer,
+            zIndex: 1300,
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',

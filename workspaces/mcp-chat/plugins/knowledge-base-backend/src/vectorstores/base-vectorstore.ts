@@ -32,9 +32,15 @@ export interface VectorStoreConfig {
   id: string;
   apiKey?: string;
   baseUrl?: string;
-  indexName: string;
+  indexName?: string;
   environment?: string;
   config?: Record<string, string>;
+  // LlamaStack fields
+  vectorStoreId?: string;
+  token?: string;
+  chunkingStrategy?: 'auto' | 'static';
+  maxChunkSizeTokens?: number;
+  chunkOverlapTokens?: number;
 }
 
 /**
@@ -112,4 +118,3 @@ export abstract class VectorStoreProvider {
     namespace?: string,
   ): Promise<VectorStoreDocument[]>;
 }
-

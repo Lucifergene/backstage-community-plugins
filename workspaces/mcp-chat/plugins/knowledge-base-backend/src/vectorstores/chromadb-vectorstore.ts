@@ -177,7 +177,7 @@ export class ChromaDBVectorStore extends VectorStoreProvider {
 
     return {
       totalDocuments: count,
-      indexName: this.config.indexName,
+      indexName: this.config.indexName!,
       dimensions,
     };
   }
@@ -233,4 +233,3 @@ export class ChromaDBVectorStore extends VectorStoreProvider {
     return documents;
   }
 }
-

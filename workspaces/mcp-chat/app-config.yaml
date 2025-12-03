@@ -84,14 +84,14 @@ mcpChat:
 # When configured, takes precedence over traditional providers.
 #
 knowledgeBase:
-  llamastack:
-    baseUrl: ${LLAMASTACK_BASE_URL}           # e.g., 'https://your-llamastack-server.com'
-    vectorStoreId: ${LLAMASTACK_VECTOR_STORE} # e.g., 'vs_xxxxx'
-    model: ${LLAMASTACK_MODEL}                # e.g., 'gemini/gemini-2.5-flash'
-    # token: ${LLAMASTACK_API_KEY}            # Optional: uncomment if auth required
-    chunkingStrategy: 'static'                # 'auto' or 'static'
-    maxChunkSizeTokens: 200
-    chunkOverlapTokens: 50
+  vectorStores:
+    - id: llamastack
+      baseUrl: ${LLAMASTACK_BASE_URL}  # e.g., 'https://your-llamastack-server.com'
+      vectorStoreId: ${LLAMASTACK_VECTOR_STORE} # e.g., 'vs_xxxxx'
+      # token: ${LLAMASTACK_API_KEY} # Optional: uncomment if authentication required
+      chunkingStrategy: 'static' # 'auto' or 'static'
+      maxChunkSizeTokens: 200
+      chunkOverlapTokens: 50
 #
 # Option 2: Traditional embedding provider + vector store (Pinecone/ChromaDB)
 # Comment out llamastack above and uncomment below to use:

@@ -5492,7 +5492,7 @@ __metadata:
     "@backstage/errors": "npm:^1.2.7"
     "@backstage/plugin-catalog-node": "npm:^1.17.1"
     "@google/generative-ai": "npm:^0.24.1"
-    "@lucifergene/plugin-knowledge-base-backend": "npm:^0.1.1"
+    "@lucifergene/plugin-knowledge-base-backend": "npm:^0.1.2"
     "@modelcontextprotocol/sdk": "npm:^1.11.0"
     "@types/express": "npm:^4.17.6"
     "@types/supertest": "npm:^2.0.12"
@@ -6095,7 +6095,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lucifergene/plugin-knowledge-base-backend@npm:^0.1.1, @lucifergene/plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend":
+"@lucifergene/plugin-knowledge-base-backend@npm:^0.1.2, @lucifergene/plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend":
   version: 0.0.0-use.local
   resolution: "@lucifergene/plugin-knowledge-base-backend@workspace:plugins/knowledge-base-backend"
   dependencies:

@@ -32,16 +32,13 @@ export interface ProviderConfig {
 // =============================================================================
 
 /**
- * Configuration for Llama Stack integration
- * Uses Llama Stack's OpenAI-compatible APIs with Responses API for RAG
+ * Configuration for Llama Stack vector store integration
  */
 export interface LlamaStackConfig {
   /** Base URL for the Llama Stack server */
   baseUrl: string;
   /** ID of an existing vector store on the Llama Stack server */
   vectorStoreId: string;
-  /** LLM model to use for Responses API (e.g., 'gemini/gemini-2.5-flash') */
-  model: string;
   /** Optional API token for authentication */
   token?: string;
   /** Chunking strategy for file uploads: 'auto' or 'static' */
