@@ -39,6 +39,7 @@ export type {
   ProviderConfig,
   EmbeddingProviderStatus,
   VectorStoreStatus,
+  LlamaStackConfig,
 } from './types';
 
 // Export provider interfaces for advanced usage
@@ -49,4 +50,3 @@ export type {
   VectorStoreQueryResult,
   VectorStoreConfig,
 } from './vectorstores/base-vectorstore';
-

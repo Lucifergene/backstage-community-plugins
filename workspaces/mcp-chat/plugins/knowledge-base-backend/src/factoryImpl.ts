@@ -20,13 +20,17 @@ import type {
 } from '@backstage/backend-plugin-api';
 import type { KnowledgeBaseService } from './service/KnowledgeBaseService';
 import { KnowledgeBaseServiceImpl } from './service/KnowledgeBaseServiceImpl';
+import { LlamaStackKnowledgeBaseService } from './service/LlamaStackKnowledgeBaseService';
 import { DocumentService } from './service/DocumentService';
 import { EmbeddingProviderFactory } from './providers/embedding-provider-factory';
 import {
   VectorStoreFactory,
   getVectorStoreConfig,
 } from './vectorstores/vectorstore-factory';
-import { getEmbeddingProviderConfig } from './utils/config-helper';
+import {
+  getEmbeddingProviderConfig,
+  getLlamaStackConfig,
+} from './utils/config-helper';
 
 /**
  * Options for creating a KnowledgeBaseService
@@ -40,6 +44,12 @@ export interface CreateKnowledgeBaseServiceOptions {
 /**
  * Factory implementation for creating KnowledgeBaseService instances.
  * Initializes embedding providers, vector stores, and document services.
+ *
+ * Priority order:
+ * 1. If knowledgeBase.llamastack is configured, use LlamaStackKnowledgeBaseService
+ * 2. Otherwise, use standard KnowledgeBaseServiceImpl with embedding provider + vector store
+ *
+ * This allows Llama Stack to coexist with Pinecone/ChromaDB configurations.
  *
  * @example
  * ```typescript
@@ -56,13 +66,27 @@ export async function createKnowledgeBaseService(
 ): Promise<KnowledgeBaseService> {
   const { logger, config } = options;
 
+  // Check for Llama Stack configuration first
+  const llamaStackConfig = getLlamaStackConfig(config);
+  if (llamaStackConfig) {
+    logger.info(
+      `Using Llama Stack knowledge base with vector store: ${llamaStackConfig.vectorStoreId}`,
+    );
+    return new LlamaStackKnowledgeBaseService(llamaStackConfig, logger);
+  }
+
+  // Fall back to standard embedding provider + vector store configuration
+  logger.info(
+    'Llama Stack not configured, using standard embedding provider + vector store',
+  );
+
   const embeddingConfig = getEmbeddingProviderConfig(config);
   const vectorStoreConfig = getVectorStoreConfig(config);
 
   if (!vectorStoreConfig) {
     throw new Error(
       'Knowledge Base vector store is not configured. ' +
-        'Please configure knowledgeBase.vectorStores in app-config.yaml',
+        'Please configure knowledgeBase.vectorStores or knowledgeBase.llamastack in app-config.yaml',
     );
   }
 

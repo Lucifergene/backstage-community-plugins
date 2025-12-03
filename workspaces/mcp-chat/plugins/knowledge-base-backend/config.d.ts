@@ -17,10 +17,54 @@ export interface Config {
   /** Configuration for the Knowledge Base backend plugin */
   knowledgeBase?: {
     /**
-     * Embedding providers configuration (array format - first is active)
+     * Llama Stack configuration (optional - if configured, takes precedence)
+     * Uses Llama Stack's OpenAI-compatible APIs for RAG with Responses API.
+     * When configured, embeddingProviders and vectorStores are not required.
      * @visibility backend
      */
-    embeddingProviders: Array<{
+    llamastack?: {
+      /**
+       * Base URL for the Llama Stack server
+       * @visibility backend
+       */
+      baseUrl: string;
+      /**
+       * ID of an existing vector store on the Llama Stack server
+       * @visibility backend
+       */
+      vectorStoreId: string;
+      /**
+       * LLM model to use for Responses API (e.g., 'gemini/gemini-2.5-flash')
+       * @visibility backend
+       */
+      model: string;
+      /**
+       * Optional API token for authentication
+       * @visibility secret
+       */
+      token?: string;
+      /**
+       * Chunking strategy for file uploads: 'auto' or 'static'
+       * @visibility backend
+       */
+      chunkingStrategy?: 'auto' | 'static';
+      /**
+       * Max chunk size in tokens (for static chunking)
+       * @visibility backend
+       */
+      maxChunkSizeTokens?: number;
+      /**
+       * Chunk overlap in tokens (for static chunking)
+       * @visibility backend
+       */
+      chunkOverlapTokens?: number;
+    };
+    /**
+     * Embedding providers configuration (array format - first is active)
+     * Not required if llamastack is configured.
+     * @visibility backend
+     */
+    embeddingProviders?: Array<{
       /**
        * Provider ID: openai, gemini
        * @visibility backend
@@ -49,9 +93,10 @@ export interface Config {
     }>;
     /**
      * Vector stores configuration (array format - first is active)
+     * Not required if llamastack is configured.
      * @visibility backend
      */
-    vectorStores: Array<{
+    vectorStores?: Array<{
       /**
        * Vector store ID: pinecone, chromadb
        * @visibility backend

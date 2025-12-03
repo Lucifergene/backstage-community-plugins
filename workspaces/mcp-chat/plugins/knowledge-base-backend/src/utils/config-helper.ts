@@ -14,7 +14,59 @@
  * limitations under the License.
  */
 import { RootConfigService } from '@backstage/backend-plugin-api';
-import { ProviderConfig } from '../types';
+import { ProviderConfig, LlamaStackConfig } from '../types';
+
+/**
+ * Get Llama Stack configuration from knowledgeBase namespace
+ *
+ * Expected config format:
+ * knowledgeBase:
+ *   llamastack:
+ *     baseUrl: https://lss-lss.apps.cluster.example.com
+ *     vectorStoreId: vs_xxxxx
+ *     model: gemini/gemini-2.5-flash
+ *     token: ${LLAMASTACK_API_KEY}  # optional
+ *     chunkingStrategy: static  # optional: 'auto' or 'static'
+ *     maxChunkSizeTokens: 200   # optional
+ *     chunkOverlapTokens: 50    # optional
+ *
+ * @returns LlamaStackConfig if configured, null otherwise
+ */
+export function getLlamaStackConfig(
+  config: RootConfigService,
+): LlamaStackConfig | null {
+  const llamastackConfig = config.getOptionalConfig('knowledgeBase.llamastack');
+
+  if (!llamastackConfig) {
+    return null;
+  }
+
+  const baseUrl = llamastackConfig.getOptionalString('baseUrl');
+  const vectorStoreId = llamastackConfig.getOptionalString('vectorStoreId');
+  const model = llamastackConfig.getOptionalString('model');
+
+  // Validate required fields
+  if (!baseUrl || !vectorStoreId || !model) {
+    throw new Error(
+      'Llama Stack configuration is incomplete. Required fields: baseUrl, vectorStoreId, model',
+    );
+  }
+
+  return {
+    baseUrl,
+    vectorStoreId,
+    model,
+    token: llamastackConfig.getOptionalString('token'),
+    chunkingStrategy:
+      (llamastackConfig.getOptionalString('chunkingStrategy') as
+        | 'auto'
+        | 'static') || 'static',
+    maxChunkSizeTokens:
+      llamastackConfig.getOptionalNumber('maxChunkSizeTokens') || 200,
+    chunkOverlapTokens:
+      llamastackConfig.getOptionalNumber('chunkOverlapTokens') || 50,
+  };
+}
 
 /**
  * Get embedding provider config from knowledgeBase namespace
@@ -107,4 +159,3 @@ export function getEmbeddingProviderConfig(
 
   return configTemplate as ProviderConfig;
 }
-

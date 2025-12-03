@@ -28,6 +28,31 @@ export interface ProviderConfig {
 }
 
 // =============================================================================
+// Llama Stack Configuration Types
+// =============================================================================
+
+/**
+ * Configuration for Llama Stack integration
+ * Uses Llama Stack's OpenAI-compatible APIs with Responses API for RAG
+ */
+export interface LlamaStackConfig {
+  /** Base URL for the Llama Stack server */
+  baseUrl: string;
+  /** ID of an existing vector store on the Llama Stack server */
+  vectorStoreId: string;
+  /** LLM model to use for Responses API (e.g., 'gemini/gemini-2.5-flash') */
+  model: string;
+  /** Optional API token for authentication */
+  token?: string;
+  /** Chunking strategy for file uploads: 'auto' or 'static' */
+  chunkingStrategy: 'auto' | 'static';
+  /** Max chunk size in tokens (for static chunking) */
+  maxChunkSizeTokens: number;
+  /** Chunk overlap in tokens (for static chunking) */
+  chunkOverlapTokens: number;
+}
+
+// =============================================================================
 // Document Types
 // =============================================================================
 
@@ -96,4 +121,3 @@ export interface KnowledgeBaseStatus {
   vectorStore?: VectorStoreStatus;
   timestamp: string;
 }
-

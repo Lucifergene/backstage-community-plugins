@@ -40,14 +40,17 @@ const useStyles = makeStyles(theme => ({
   layout: {
     display: 'flex',
     flexDirection: 'column',
-    height: '600px',
-    maxHeight: '600px',
+    // Use viewport-relative height to ensure chat input is visible
+    // Accounts for: header (~64px), status cards (~180px), KB bar (~70px), margins (~50px)
+    height: 'calc(100vh - 420px)',
+    minHeight: '400px', // Minimum usable height
+    maxHeight: '600px', // Cap at reasonable max
   },
   fullscreenLayout: {
     display: 'flex',
     flexDirection: 'column',
-    height: 'calc(100vh - 200px)', // Full height minus header
-    maxHeight: 'calc(100vh - 200px)',
+    height: 'calc(100vh - 120px)', // Full height minus header only
+    maxHeight: 'calc(100vh - 120px)',
   },
   header: {
     display: 'flex',
