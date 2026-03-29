@@ -4,3 +4,5 @@
 ---
 
 Backstage version bump to v1.49.2
+
+Updated `@types/uuid` to v11 and `@backstage/plugin-catalog-node` to ^2.1.0, and deduplicated yarn.lock
